@@ -1,0 +1,41 @@
+{
+  "seed": 42,
+  "train": {
+    "file": "baseline_train.jsonl",
+    "n": 4265,
+    "sha256": "7aeea735a83a0269e55e083455d0191bba3bea8fbf9a6edd9820d775169fb11a",
+    "mix": {
+      "dialogue_soap": 3000,
+      "mts_dialog": 1198,
+      "aci_bench": 67
+    }
+  },
+  "val": {
+    "file": "baseline_val.jsonl",
+    "n": 220,
+    "sha256": "0fc35d7d11f13482568b611597a0cfea3dcebcc4ac0fc1ae0fa5e1f4e2e1ae5c",
+    "mix": {
+      "aci_bench": 20,
+      "mts_dialog": 100,
+      "dialogue_soap": 100
+    }
+  },
+  "test": {
+    "aci_bench/test_taskB_1": 40,
+    "aci_bench/test_taskC_2": 40,
+    "aci_bench/test_taskC_3": 40,
+    "mts_dialog/test_chat_2023": 200,
+    "mts_dialog/test_sum_2023": 200,
+    "dialogue_soap/test": 250
+  },
+  "leakage_check": {
+    "id_overlap": 0,
+    "dropped_for_verbatim_overlap_with_test": [
+      "mts_dialog_train_989",
+      "mts_dialog_train_926",
+      "mts_dialog_train_901"
+    ],
+    "duplicate_dialogues_within_train": 1,
+    "status": "passed"
+  }
+}

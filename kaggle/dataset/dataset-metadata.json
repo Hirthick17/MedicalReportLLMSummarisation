@@ -1,0 +1,6 @@
+{
+  "title": "medsum-fact processed (Review 2 baseline)",
+  "id": "hirthick17/medsum-fact-processed",
+  "licenses": [{"name": "other"}],
+  "description": "Unified dialogue->note jsonl for the FaCTS BCSE306L project: baseline_train/val mix (ACI-Bench + MTS-Dialog + sampled DialogueSOAP, seed 42) and the six official test splits. Built by scripts/import_datasets.py and scripts/make_baseline_split.py. Source corpora keep their own licences (ACI-Bench research use, MTS-Dialog CC BY 4.0, omi-health dialogue-to-SOAP per dataset card)."
+}

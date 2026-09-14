@@ -1,0 +1,29 @@
+# Never commit corpora. The PhysioNet licences forbid redistribution outright,
+# and the open sets are large enough that the downloader is the right way to get them.
+data/raw/
+data/interim/
+data/processed/
+!data/MANIFEST.json
+
+# credentials
+.env
+*.token
+
+# model artifacts
+checkpoints/
+outputs/
+runs/
+wandb/
+*.safetensors
+*.bin
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Kaggle dataset staging: derived copies of licensed corpora, uploaded via the API, never committed
+kaggle/dataset/*.jsonl
+kaggle/dataset/test/

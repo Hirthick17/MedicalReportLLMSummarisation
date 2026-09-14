@@ -1,0 +1,15 @@
+{
+  "id": "hirthick17/medsum-baseline-qlora",
+  "title": "medsum baseline qlora",
+  "code_file": "baseline_qlora.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": ["hirthick17/medsum-fact-processed"],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
