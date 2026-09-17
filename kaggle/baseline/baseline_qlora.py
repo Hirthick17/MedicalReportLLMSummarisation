@@ -17,7 +17,7 @@ MODE is set below because Kaggle scripts take no arguments:
 """
 
 # ---- run configuration ---------------------------------------------------------------
-MODE = "smoke"                       # "smoke" | "full"
+MODE = "full"                        # "smoke" | "full"
 RUN_NAME = "baseline_qlora_llama31_8b"
 MODEL_ID = "unsloth/Meta-Llama-3.1-8B-Instruct"   # ungated mirror of meta-llama/Llama-3.1-8B-Instruct
 MAX_SEQ_LEN = 4096
@@ -360,13 +360,27 @@ for name in TEST_FILES:
     log(f"wrote {name}: {len(preds)} preds, truncated {sum(p['truncated'] for p in preds)}")
 
 # §7 step 5 adapter reload test (fresh PeftModel on the same base, greedy -> must match)
-del model; torch.cuda.empty_cache()
+# Two things must match the in-session model for byte-identical greedy output (smoke v8, 14 Sep,
+# reported MISMATCH): prepare_model_for_kbit_training upcast the non-quantised params (embeddings,
+# RMSNorm, lm_head) to fp32, so the residual stream ran in fp32 during training-side generation, and
+# val item #0 was generated inside a left-padded batch of GEN_BATCH, not alone. Free the trainer too:
+# it still references the first model, and two 8B loads plus fp32 heads would not fit on 2x T4.
+steps_completed = trainer.state.global_step
+del trainer, model; import gc; gc.collect(); torch.cuda.empty_cache()
 base = AutoModelForCausalLM.from_pretrained(MODEL_ID, quantization_config=bnb, device_map=DEVICE_MAP,
                                             torch_dtype=COMPUTE_DTYPE, attn_implementation="sdpa")
+for p_ in base.parameters():
+    if p_.dtype in (torch.float16, torch.bfloat16):
+        p_.data = p_.data.to(torch.float32)
 model = PeftModel.from_pretrained(base, f"{OUT}/final").eval()
-reload_pred = generate(val_subset[:1], "baseline_qlora", f"{RUN_NAME}/final")[0]["prediction"]
-reload_ok = reload_pred == val_preds[0]["prediction"]
-log(f"adapter reload test: {'PASS' if reload_ok else 'MISMATCH'}")
+model.config.use_cache = True
+reload_preds = generate(val_subset[:GEN_BATCH], "baseline_qlora", f"{RUN_NAME}/final")
+reload_identical = sum(a["prediction"] == b["prediction"] for a, b in zip(reload_preds, val_preds))
+reload_rougeL = float(np.mean([scorer.score(a["prediction"], b["prediction"])["rougeL"].fmeasure
+                               for a, b in zip(reload_preds, val_preds)]))
+reload_ok = reload_preds[0]["prediction"] == val_preds[0]["prediction"]
+log(f"adapter reload test: {'PASS' if reload_ok else 'MISMATCH'} | identical {reload_identical}/{len(reload_preds)} "
+    f"| rougeL(reload vs in-session) {reload_rougeL:.4f}")
 
 # ---- training_config.json (§9) -------------------------------------------------------------
 config = {
@@ -380,14 +394,19 @@ config = {
     "prompt": {"system": SYSTEM, "task_instruction": TASK, "mts_section_names": MTS_SECTIONS, "loss_on": "assistant_only"},
     "training": {"liger_fused_ce": USE_LIGER, "batch_size": 1, "grad_accum": GRAD_ACCUM, "epochs": EPOCHS, "max_steps": args.max_steps, "lr": LR,
                  "scheduler": "cosine", "warmup_ratio": 0.03, "optim": "paged_adamw_8bit", "seed": SEED,
-                 "steps_completed": trainer.state.global_step, "best_step": best.get("step"),
+                 "steps_completed": steps_completed, "best_step": best.get("step"),
                  "best_eval_loss": best.get("eval_loss"), "final_train_loss": train_result.metrics.get("train_loss"),
                  "wall_clock_guard_hours": MAX_TRAIN_HOURS},
     "hardware": {"gpu": GPU, "n_gpu": N_GPU, "device_map": str(DEVICE_MAP), "vram_gb_total": round(VRAM_GB, 1),
                  "peak_vram_gb_per_gpu": round(peak_gb, 2),
                  "wall_time_h": round((time.time() - T0) / 3600, 2)},
     "decoding": GEN | {"eos_token_id": EOS_IDS},
-    "validation_checks": val_checks | {"adapter_reload_identical": reload_ok},
+    "validation_checks": val_checks | {"adapter_reload_identical": reload_ok,
+                                       "adapter_reload_identical_n": f"{reload_identical}/{len(reload_preds)}",
+                                       "adapter_reload_rougeL_vs_in_session": round(reload_rougeL, 4),
+                                       "adapter_reload_note": "reload upcasts non-quantised params to fp32 like "
+                                                              "prepare_model_for_kbit_training; a plain fp16 reload "
+                                                              "gives near-identical but not byte-identical text"},
     "versions": {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__,
                  "bitsandbytes": bitsandbytes.__version__, "python": sys.version.split()[0]},
 }
