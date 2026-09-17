@@ -37,5 +37,9 @@ evaluate>=0.4
 scikit-learn>=1.5
 numpy>=1.26
 
+# --- Review 2 report (scripts/make_report.py) -----------------------------------
+reportlab>=4.0
+matplotlib>=3.8
+
 # --- Stage 6: demo ---------------------------------------------------------------
 gradio>=4.40

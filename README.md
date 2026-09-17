@@ -141,6 +141,8 @@ medsum-fact/
 │   ├── download_datasets.py    # raw corpora -> data/raw/
 │   ├── import_datasets.py      # data/raw/ -> data/processed/ unified jsonl
 │   └── make_baseline_split.py  # Review 2 train/val mix + leakage checks + manifest
+│   ├── make_report.py          # Kaggle run outputs -> reports/<run>/report.pdf (+ metrics.json)
+│   └── fetch_kaggle_run.py     # wait for the kernel, download its output, build the report
 ├── kaggle/
 │   ├── dataset/                # what gets uploaded as the private Kaggle dataset
 │   └── baseline/               # baseline_qlora.py + kernel-metadata.json (see REVIEW2_BASELINE.md §2.2a)
@@ -150,8 +152,17 @@ medsum-fact/
 │   ├── interim/                # fact-extractor cache (Stage 1, Review 3)
 │   ├── processed/              # unified train/dev/test jsonl
 │   └── MANIFEST.json
+├── reports/                    # committed: report.pdf, metrics.json, training_config/trainer_state per run
 └── outputs/                    # git-ignored: adapters, checkpoints, predictions
-    └── baseline_qlora_llama31_8b/   # layout in REVIEW2_BASELINE.md §9
+    └── kaggle/outputs/baseline_qlora_llama31_8b/   # `kaggle kernels output` lands here; layout in REVIEW2_BASELINE.md §9
+```
+
+## Baseline run → report
+
+```bash
+python scripts/fetch_kaggle_run.py                      # polls hirthick17/medsum-baseline-qlora until it finishes,
+                                                        # downloads to outputs/kaggle/, then builds the report
+python scripts/make_report.py                           # (re)build reports/<run>/report.pdf from outputs/
 ```
 
 ## Notes on the data
