@@ -1,0 +1,229 @@
+{
+  "run_name": "baseline_qlora_llama31_8b",
+  "mode": "full",
+  "system": "baseline_qlora",
+  "base_model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+  "base_model_note": "ungated mirror of meta-llama/Llama-3.1-8B-Instruct (Llama 3.1 Community Licence)",
+  "quantization": {
+    "load_in_4bit": true,
+    "quant_type": "nf4",
+    "double_quant": true,
+    "compute_dtype": "torch.float16"
+  },
+  "lora": {
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "trainable_params": 41943040,
+    "total_params": 8072204288
+  },
+  "data": {
+    "train": "baseline_train.jsonl",
+    "val": "baseline_val.jsonl",
+    "manifest": {
+      "seed": 42,
+      "train": {
+        "file": "baseline_train.jsonl",
+        "n": 4265,
+        "sha256": "7aeea735a83a0269e55e083455d0191bba3bea8fbf9a6edd9820d775169fb11a",
+        "mix": {
+          "dialogue_soap": 3000,
+          "mts_dialog": 1198,
+          "aci_bench": 67
+        }
+      },
+      "val": {
+        "file": "baseline_val.jsonl",
+        "n": 220,
+        "sha256": "0fc35d7d11f13482568b611597a0cfea3dcebcc4ac0fc1ae0fa5e1f4e2e1ae5c",
+        "mix": {
+          "aci_bench": 20,
+          "mts_dialog": 100,
+          "dialogue_soap": 100
+        }
+      },
+      "test": {
+        "aci_bench/test_taskB_1": 40,
+        "aci_bench/test_taskC_2": 40,
+        "aci_bench/test_taskC_3": 40,
+        "mts_dialog/test_chat_2023": 200,
+        "mts_dialog/test_sum_2023": 200,
+        "dialogue_soap/test": 250
+      },
+      "leakage_check": {
+        "id_overlap": 0,
+        "dropped_for_verbatim_overlap_with_test": [
+          "mts_dialog_train_989",
+          "mts_dialog_train_926",
+          "mts_dialog_train_901"
+        ],
+        "duplicate_dialogues_within_train": 1,
+        "status": "passed"
+      }
+    },
+    "n_train_used": 4265,
+    "n_val_used": 220,
+    "max_seq_length": 4096
+  },
+  "prompt": {
+    "system": "You are a clinical documentation assistant. Given the transcript of a doctor-patient consultation, write the clinical note. Include only information stated in the transcript.",
+    "task_instruction": {
+      "aci_bench": "Write the complete clinical note for this encounter, using upper-case section headers such as CHIEF COMPLAINT, HISTORY OF PRESENT ILLNESS, REVIEW OF SYSTEMS, PHYSICAL EXAM, RESULTS, ASSESSMENT AND PLAN as applicable.",
+      "dialogue_soap": "Write a SOAP note with four paragraphs labelled S:, O:, A:, P: (Subjective, Objective, Assessment, Plan).",
+      "mts_dialog": "Write the {section} section of the clinical note."
+    },
+    "mts_section_names": {
+      "FAM/SOCHX": "FAMILY HISTORY / SOCIAL HISTORY",
+      "GENHX": "HISTORY OF PRESENT ILLNESS",
+      "PASTMEDICALHX": "PAST MEDICAL HISTORY",
+      "CC": "CHIEF COMPLAINT",
+      "PASTSURGICAL": "PAST SURGICAL HISTORY",
+      "ALLERGY": "ALLERGIES",
+      "ROS": "REVIEW OF SYSTEMS",
+      "MEDICATIONS": "MEDICATIONS",
+      "ASSESSMENT": "ASSESSMENT",
+      "EXAM": "PHYSICAL EXAM",
+      "DIAGNOSIS": "DIAGNOSIS",
+      "DISPOSITION": "DISPOSITION",
+      "PLAN": "PLAN",
+      "EDCOURSE": "EMERGENCY DEPARTMENT COURSE",
+      "IMMUNIZATIONS": "IMMUNIZATIONS",
+      "IMAGING": "IMAGING",
+      "GYNHX": "GYNECOLOGIC HISTORY",
+      "PROCEDURES": "PROCEDURES",
+      "OTHER_HISTORY": "OTHER HISTORY",
+      "LABS": "LABS"
+    },
+    "loss_on": "assistant_only"
+  },
+  "training": {
+    "liger_fused_ce": true,
+    "batch_size": 1,
+    "grad_accum": 16,
+    "epochs": 5,
+    "max_steps": 20,
+    "lr": 0.0002,
+    "scheduler": "cosine",
+    "warmup_ratio": 0.03,
+    "optim": "paged_adamw_8bit",
+    "seed": 42,
+    "eval_every": 100,
+    "planned_steps": 20,
+    "steps_completed": 20,
+    "epochs_completed": 5.0,
+    "best_step": 20,
+    "best_eval_loss": 0.9539413452148438,
+    "final_train_loss": 0.940747594833374,
+    "train_runtime_h": 0.99,
+    "wall_clock_guard_hours": 7.5,
+    "wall_clock_guard_hit": false,
+    "note": "train_summary.json absent: this adapter came from the single-kernel run of 17 Sep 2026 (killed by the 12 h cap after training)"
+  },
+  "hardware": {
+    "gpu": "2x Tesla T4",
+    "n_gpu": 2,
+    "device_map": "balanced",
+    "vram_gb_total": 29.1,
+    "peak_vram_gb_per_gpu": null,
+    "wall_time_h": null
+  },
+  "versions": {},
+  "training_kernel": "hirthick17/medsum-baseline-qlora",
+  "inference_kernel": "hirthick17/medsum-baseline-infer",
+  "hardware_inference": {
+    "gpu": "2x Tesla T4",
+    "n_gpu": 2,
+    "device_map": "balanced",
+    "vram_gb_total": 29.1,
+    "peak_vram_gb_per_gpu": 10.49,
+    "wall_time_h": 3.82
+  },
+  "versions_inference": {
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6",
+    "peft": "0.19.1",
+    "bitsandbytes": "0.50.2",
+    "python": "3.12.13"
+  },
+  "decoding": {
+    "max_new_tokens": 1024,
+    "do_sample": false,
+    "num_beams": 1,
+    "repetition_penalty": 1.2,
+    "no_repeat_ngram_size_generated_only": 6,
+    "eos_token_id": [
+      128009
+    ],
+    "batch": 4,
+    "adapter": "final",
+    "non_quantised_params_fp32": true
+  },
+  "validation_checks": {
+    "n": 20,
+    "rougeL_f": 0.2674137595918519,
+    "rougeL_f_by_dataset_x100": {
+      "aci_bench": 32.6,
+      "mts_dialog": 20.8
+    },
+    "length_ratio": 2.1138226878504978,
+    "truncated": 0,
+    "empty": 0,
+    "adapter_reload_fresh_process": true,
+    "adapter_sha256": "f431c7434ba6e411d4801490f31a98edfae24a857b41e649504ae939c19d16b1",
+    "adapter_matches_checkpoint": null,
+    "adapter_matches_train_summary": null,
+    "adapter_reload_note": "generation runs in a separate kernel from training (fresh base + PeftModel.from_pretrained), which is the \u00a77 step 5 reload test itself; non-quantised params upcast to fp32 as in training",
+    "zeroshot_base_control": {
+      "n": 20,
+      "rougeL_f": 0.21198232676418152,
+      "rougeL_f_by_dataset_x100": {
+        "aci_bench": 26.6,
+        "mts_dialog": 15.8
+      },
+      "length_ratio": 2.781255929782229,
+      "truncated": 0,
+      "empty": 0
+    }
+  },
+  "test_stats": {
+    "aci_bench_test_taskB_1": {
+      "n": 40,
+      "truncated": 1,
+      "rougeL_x100": 32.4
+    },
+    "aci_bench_test_taskC_2": {
+      "n": 40,
+      "truncated": 0,
+      "rougeL_x100": 32.3
+    },
+    "aci_bench_test_taskC_3": {
+      "n": 40,
+      "truncated": 1,
+      "rougeL_x100": 31.2
+    },
+    "mts_dialog_test_chat_2023": {
+      "n": 200,
+      "truncated": 0,
+      "rougeL_x100": 24.5
+    },
+    "mts_dialog_test_sum_2023": {
+      "n": 200,
+      "truncated": 0,
+      "rougeL_x100": 24.4
+    },
+    "dialogue_soap_test": {
+      "n": 250,
+      "truncated": 0,
+      "rougeL_x100": 25.6
+    }
+  }
+}

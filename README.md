@@ -3,13 +3,19 @@
 Fact-Constrained, Traceable Summarization of clinical text.
 BCSE306L mini-project (DA1 · DA2 · DA3).
 
-Two documents describe the work:
+Start with **[docs/REVIEW2_SUMMARY.md](docs/REVIEW2_SUMMARY.md)** — the one-page overview of what
+Review 2 delivered, the key numbers and where everything is. Then, per role:
 
-- **[MODEL_PLAN.md](MODEL_PLAN.md)** — the full FaCTS design: architecture, baselines, metrics,
-  ablations, compute budget and risk table. This is the Review 3 target.
-- **[REVIEW2_BASELINE.md](REVIEW2_BASELINE.md)** — the Review 2 deliverable: the plain QLoRA
-  baseline end to end (model choice, environment, 4-bit QLoRA, training, troubleshooting,
-  testing, inference, saving, handoff to evaluation). Review 2 stops there.
+- **[docs/PERSON1_DATA_PIPELINE.md](docs/PERSON1_DATA_PIPELINE.md)** — datasets, cleaning, standard
+  schema, duplicates / leakage / length audit, train-val-test preparation, the clinical fact extractor
+  (`src/cfe/`) and the facts dataset.
+- **[docs/PERSON2_MODEL_TRAINING.md](docs/PERSON2_MODEL_TRAINING.md)** — model choice, environment,
+  4-bit QLoRA, the training run, issues solved, testing, generation, saved artefacts, handoff.
+  Procedure and troubleshooting in full: **[REVIEW2_BASELINE.md](REVIEW2_BASELINE.md)**; run history:
+  **[STATUS.md](STATUS.md)**.
+- **[docs/PERSON3_EVALUATION.md](docs/PERSON3_EVALUATION.md)** — ROUGE / BERTScore, the factuality
+  checker (`src/eval/`), results tables, figures, example errors, preliminary conclusions.
+- **[MODEL_PLAN.md](MODEL_PLAN.md)** — the full FaCTS design (Review 3 target).
 
 ---
 
@@ -20,6 +26,11 @@ pip install requests huggingface_hub
 python scripts/download_datasets.py --tier core --tier extra   # ~1.3 GB into data/raw/
 python scripts/import_datasets.py                              # -> data/processed/<dataset>/<split>.jsonl
 python scripts/make_baseline_split.py                          # -> baseline_train/val.jsonl + train_manifest.json
+python scripts/audit_dataset.py                                # -> reports/data_audit/ (dups, leakage, token lengths)
+python scripts/extract_clinical_facts.py                       # -> data/processed/facts/ (8 min CPU)
+python -m src.eval.run_eval --run outputs/kaggle/outputs/baseline_qlora_llama31_8b --label run3_rep1.2_ngram6 --bertscore
+python -m src.eval.run_eval --compare                          # -> reports/eval_baseline/comparison.md
+python -m pytest tests -q
 ```
 
 The `core` tier alone (~860 MB) is enough for MODEL_PLAN.md; `extra` adds `dialogue_soap`,
@@ -133,37 +144,64 @@ Record counts as of 2026-09-14 (`--validate-only`):
 
 ```
 medsum-fact/
+├── docs/                       # Review 2 documentation (summary + one document per role)
 ├── MODEL_PLAN.md               # full FaCTS design (Review 3)
-├── REVIEW2_BASELINE.md         # plain QLoRA baseline workflow (Review 2)
+├── REVIEW2_BASELINE.md         # plain QLoRA baseline procedure + troubleshooting (Review 2)
+├── STATUS.md                   # run history
 ├── README.md
 ├── requirements.txt
 ├── scripts/
 │   ├── download_datasets.py    # raw corpora -> data/raw/
 │   ├── import_datasets.py      # data/raw/ -> data/processed/ unified jsonl
-│   └── make_baseline_split.py  # Review 2 train/val mix + leakage checks + manifest
-│   ├── make_report.py          # Kaggle run outputs -> reports/<run>/report.pdf (+ metrics.json)
-│   └── fetch_kaggle_run.py     # wait for the kernel, download its output, build the report
+│   ├── make_baseline_split.py  # Review 2 train/val mix + leakage checks + manifest
+│   ├── audit_dataset.py        # duplicates, near-duplicates, unusable samples, leakage, token lengths -> reports/data_audit/
+│   ├── extract_clinical_facts.py # runs src/cfe over every split -> data/processed/facts/, data/interim/cfe_stats.json
+│   ├── make_report.py          # merged Kaggle outputs -> reports/<run>/report.pdf (+ metrics.json)
+│   └── fetch_kaggle_run.py     # drive kernel A -> adapter dataset -> kernel B, verify sha, download, report
+├── src/
+│   ├── cfe/                    # rule-based Clinical Fact Extractor: lexicon (lex_*.py), negation.py, extractor.py
+│   └── eval/                   # metrics.py (ROUGE/BERTScore/degeneration), factuality.py, run_eval.py
+├── tests/                      # pytest: test_cfe.py, test_factuality.py
 ├── kaggle/
 │   ├── dataset/                # what gets uploaded as the private Kaggle dataset
-│   └── baseline/               # baseline_qlora.py + kernel-metadata.json (see REVIEW2_BASELINE.md §2.2a)
+│   ├── baseline/               # kernel A: baseline_qlora.py — TRAINS, saves final/ + train_summary.json
+│   ├── adapter/                # metadata of the private adapter dataset
+│   └── infer/                  # kernel B: baseline_infer.py — loads the pinned adapter, GENERATES, writes training_config.json
 ├── data/
-│   ├── raw/<dataset_key>/      # downloader writes here
-│   │   └── .download_complete  # marker + metadata; delete to force refetch
-│   ├── interim/                # fact-extractor cache (Stage 1, Review 3)
-│   ├── processed/              # unified train/dev/test jsonl
+│   ├── raw/<dataset_key>/      # downloader writes here (git-ignored)
+│   ├── processed/              # unified jsonl, baseline_train/val.jsonl, train_manifest.json, facts/ (git-ignored)
+│   ├── interim/                # cfe_stats.json
 │   └── MANIFEST.json
-├── reports/                    # committed: report.pdf, metrics.json, training_config/trainer_state per run
+├── reports/                    # committed: data_audit/, eval_baseline/<label>/, baseline_qlora_llama31_8b/report.pdf
 └── outputs/                    # git-ignored: adapters, checkpoints, predictions
-    └── kaggle/outputs/baseline_qlora_llama31_8b/   # `kaggle kernels output` lands here; layout in REVIEW2_BASELINE.md §9
+    ├── kaggle/outputs/baseline_qlora_llama31_8b/     # run 3 (kernel A + kernel B merged; layout in REVIEW2_BASELINE.md §9)
+    ├── kaggle_run1_old_decoding/                    # run 1 predictions (old decoding, same adapter)
+    └── kaggle_run2_smoke_adapter/                   # run 2 — WRONG adapter, kept only as evidence
 ```
 
 ## Baseline run → report
 
+The baseline is two Kaggle kernels, because one kernel gets 12 h and training alone takes
+~11 h on 2× T4 (see STATUS.md for the run that proved it):
+
+| kernel | id | does | budget |
+|---|---|---|---|
+| A `kaggle/baseline/` | `hirthick17/medsum-baseline-qlora` | QLoRA training → `final/`, `trainer_state.json`, `train_summary.json` | ≤ 10.5 h train + save |
+| B `kaggle/infer/` | `hirthick17/medsum-baseline-infer` | loads the adapter from the dataset `hirthick17/medsum-baseline-adapter` (sha256-pinned), generates val checks + 6 test splits → `predictions/`, `training_config.json` | ~4 h |
+
 ```bash
-python scripts/fetch_kaggle_run.py                      # polls hirthick17/medsum-baseline-qlora until it finishes,
-                                                        # downloads to outputs/kaggle/, then builds the report
+kaggle kernels push -p kaggle/baseline --accelerator NvidiaTeslaT4   # start training (≈ 11 h)
+python scripts/fetch_kaggle_run.py                      # waits for A, downloads, uploads the adapter, pushes B, waits, downloads, verifies, report
+python scripts/fetch_kaggle_run.py --stage adapter      # upload outputs/kaggle/.../final as the adapter dataset only
+python scripts/fetch_kaggle_run.py --stage infer --push # re-run generation only (e.g. after a decoding change)
 python scripts/make_report.py                           # (re)build reports/<run>/report.pdf from outputs/
 ```
+
+The adapter goes through a dataset rather than kernel B mounting kernel A directly because Kaggle
+mounts a kernel's latest *completed* version: after the cancelled 17 Sep run that was the smoke run,
+and run 2 (18 Sep) evaluated a 20-step adapter for 3.8 h without anything failing. Kernel B now
+refuses any adapter whose sha256 differs from `EXPECTED_ADAPTER_SHA256`, and both the fetch script
+and the report check it against the local `final/` (details: STATUS.md, REVIEW2_BASELINE.md §2.2a).
 
 ## Notes on the data
 

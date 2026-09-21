@@ -1,0 +1,15 @@
+{
+  "id": "hirthick17/medsum-baseline-infer",
+  "title": "medsum baseline infer",
+  "code_file": "baseline_infer.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": ["hirthick17/medsum-fact-processed", "hirthick17/medsum-baseline-adapter"],
+  "competition_sources": [],
+  "kernel_sources": ["hirthick17/medsum-baseline-qlora"],
+  "model_sources": []
+}

@@ -126,26 +126,63 @@ kaggle/
 │   ├── dataset-metadata.json
 │   ├── baseline_train.jsonl, baseline_val.jsonl, train_manifest.json
 │   └── test/<dataset>_<split>.jsonl        (the six official test splits)
-└── baseline/
-    ├── kernel-metadata.json       # id hirthick17/medsum-baseline-qlora, GPU on, internet on
-    └── baseline_qlora.py          # the whole §3–§9 pipeline as one Kaggle script
+├── baseline/                      # kernel A — TRAINING
+│   ├── kernel-metadata.json       # id hirthick17/medsum-baseline-qlora, GPU on, internet on
+│   └── baseline_qlora.py          # §3–§5 + the save half of §9
+├── adapter/                       # -> private dataset hirthick17/medsum-baseline-adapter (~185 MB)
+│   └── dataset-metadata.json      # contents (final/, trainer_state.json) are staged from outputs/kaggle by the fetch script
+└── infer/                         # kernel B — GENERATION
+    ├── kernel-metadata.json       # id hirthick17/medsum-baseline-infer, dataset_sources = [processed data, adapter], kernel_sources = [kernel A]
+    └── baseline_infer.py          # §7 checks, §8 test splits, training_config.json; pins EXPECTED_ADAPTER_SHA256
 ```
 
 ```bash
 cd kaggle/dataset  && kaggle datasets create -p . --dir-mode zip     # first time
 cd kaggle/dataset  && kaggle datasets version -p . --dir-mode zip -m "msg"   # after re-splitting
-cd kaggle/baseline && kaggle kernels push -p . --accelerator NvidiaTeslaT4   # run (MODE set in the script)
-kaggle kernels status hirthick17/medsum-baseline-qlora
-kaggle kernels output hirthick17/medsum-baseline-qlora -p ../../outputs/kaggle   # logs + files
+kaggle kernels push -p kaggle/baseline --accelerator NvidiaTeslaT4   # A: train (MODE set in the script)
+python scripts/fetch_kaggle_run.py                                    # waits for A, downloads, uploads adapter, pushes B, waits, downloads, report
+python scripts/fetch_kaggle_run.py --stage adapter                    # upload outputs/kaggle/.../final as the adapter dataset (by hand)
+kaggle kernels push -p kaggle/infer --accelerator NvidiaTeslaT4      # B by hand (adapter dataset must exist)
+kaggle kernels status hirthick17/medsum-baseline-infer
+kaggle kernels output hirthick17/medsum-baseline-qlora -p outputs/kaggle -o   # both land in the same tree
+kaggle kernels output hirthick17/medsum-baseline-infer  -p outputs/kaggle -o
 ```
 
-`baseline_qlora.py` has a `MODE` constant: `"smoke"` (20 steps on the 64 longest examples, then
-a few generations — validates memory at the true worst case) and `"full"`. It tokenizes and
-masks labels itself and uses the plain `transformers.Trainer`, so `trl` is not a dependency.
-It forces `CUDA_VISIBLE_DEVICES=0` (Kaggle's 2×T4 would otherwise make `Trainer` wrap the 4-bit
-model in `DataParallel`) and stops training gracefully at 7.5 h so inference and saving always
-finish inside Kaggle's 12 h cap. Everything lands in `/kaggle/working/outputs/<run>/` in the §9
-layout.
+**Why two kernels.** A Kaggle kernel is killed at 12 h. The first full run (17 Sep, single
+kernel) trained for 7.5 h under the wall-clock guard, then ran generation and was killed by the
+cap while on the last test split — so `training_config.json` and 250 of 770 predictions never
+existed, and Kaggle keeps no log for a cancelled run. Splitting gives training and generation
+12 h each. Both kernels write `/kaggle/working/outputs/<run>/`, so downloading both into
+`outputs/kaggle/` produces the merged §9 layout. Kernel B rebuilds the training half of
+`training_config.json` from `trainer_state.json` if it is given output from before the split.
+
+**How kernel B gets the adapter.** Not from the `kernel_sources` mount alone. Kaggle mounts kernel
+A's latest *completed* version under `/kaggle/input/notebooks/hirthick17/medsum-baseline-qlora/`;
+a cancelled version (the 17 Sep full run, killed by the 12 h cap) is downloadable with the CLI but
+is *not* what gets mounted. Run 2 (18 Sep) therefore mounted the earlier smoke run and spent 3.8 h
+generating all 770 test items with a 20-step adapter — the run "completed", wrote a plausible
+`training_config.json`, and only the adapter sha256 in the log gave it away. Since then the
+adapter we intend to evaluate is uploaded explicitly as the private dataset
+`hirthick17/medsum-baseline-adapter` (`fetch_kaggle_run.py --stage adapter` stages `final/` +
+`trainer_state.json` from `outputs/kaggle/`), kernel B prefers `/kaggle/input/datasets/**/final/`
+over the notebook mount, refuses a `*_smoke` path in full mode, and exits in the first minute
+unless the adapter's sha256 equals `EXPECTED_ADAPTER_SHA256` in `baseline_infer.py`. On the
+laptop, `fetch_kaggle_run.py` downloads B into a staging directory and merges it into the run
+only if the sha256 kernel B hashed equals the local `final/adapter_model.safetensors`, and
+`make_report.py` carries the same check as the first line of the §10 handoff checklist (a
+mismatch puts a red "NOT THE BASELINE" banner on the PDF). The `kernel_sources` mount stays as
+the fallback for a future kernel-A run that completes normally (then `train_summary.json` carries
+the sha and the pin is updated or set to `None`).
+
+Both scripts have a `MODE` constant: `"smoke"` (A: 20 steps on the 64 longest examples —
+validates memory at the true worst case; B: 4 val items + 2 per split) and `"full"`. Kernel A
+tokenizes and masks labels itself and uses the plain `transformers.Trainer`, so `trl` is not a
+dependency; it splits the model across Kaggle's 2× T4 (`device_map="balanced"`, naive pipeline)
+because one T4 OOMs in backward at 4k tokens, and stops training gracefully at
+`MAX_TRAIN_HOURS = 10.5` so the trailing eval and the save always fit. Measured on 2× T4:
+**81 s per optimizer step** (16 examples), so 10.5 h ≈ 465 steps ≈ 1.75 of the planned 2 epochs.
+The last checkpoint keeps optimizer state, so a follow-up kernel could resume it if the missing
+quarter-epoch ever matters; it does not for Review 2.
 
 ### 2.3 Colab / Kaggle training environment
 
@@ -403,6 +440,7 @@ args = SFTConfig(
 
 | GPU | s / example (typical for 8B 4-bit, 2–4k tokens) | Wall time for 2 epochs |
 |---|---|---|
+| **2× T4, measured 17 Sep** (naive pipeline, one GPU active at a time) | **5.1 s** (81 s / 16-example step) | **12.0 h** → training kernel stops at 10.5 h ≈ 1.75 epochs; generation in a second kernel |
 | T4 (fp16) | 4–6 s | 9–14 h → **split across two sessions with checkpoint resume, or drop to 1 epoch** |
 | L4 (bf16) | 1.5–2.5 s | 3.5–6 h |
 | A100-40G | 0.7–1.0 s | 1.7–2.4 h |
@@ -456,6 +494,10 @@ template, masking or truncation bug, not a model limitation.
 | Training is 3× slower than the table | attention fallback or no `group_by_length` | check `model.config._attn_implementation` is `sdpa`; confirm `group_by_length=True`; check the GPU is not shared |
 | Generated notes stop after one section | truncated targets during training | re-run the token-length audit; raise `max_seq_length` or filter long examples |
 | Generated notes repeat a sentence forever | no EOS learned | check `tokenizer.eos_token` is appended by the template and `labels` contain it; at inference set `eos_token_id=[128001, 128009]` for Llama-3 (`<\|end_of_text\|>`, `<\|eot_id\|>`) and `repetition_penalty=1.1` |
+| **(hit 17 Sep, run 1)** 75 % of ACI-Bench notes hit `max_new_tokens=768` in "He has been having some difficulty with X." loops; MTS-Dialog fine | EOS *is* learned (MTS stops), but on 400–800-token notes `repetition_penalty=1.1` is too weak and only 67 of 4,265 training examples are full-length notes | §8.2: `max_new_tokens=1024`, `repetition_penalty=1.2`, 6-gram repeat block on generated tokens only (not HF `no_repeat_ngram_size`, which also forbids copying a 6-gram from the transcript). Longer term: up-weight ACI-Bench in the mix |
+| **(hit 17 Sep, run 1)** kernel status `CANCEL_ACKNOWLEDGED`, no log, `training_config.json` missing, last test split missing | Kaggle's 12 h cap: 7.5 h training + evals + 770 generations does not fit one kernel | §2.2a: training and generation are separate kernels |
+| **(hit 18 Sep, run 2)** kernel B `COMPLETE`, all 6 splits, 0 truncation — but `training_config.json` says `max_steps: 20, epochs_completed: 5.0`, MTS-Dialog ROUGE-L fell 35.8 → 24.5 with len ratio 3.3, and the log reads `[env] adapter at .../baseline_qlora_llama31_8b_smoke/final` | `kernel_sources` mounts kernel A's latest *completed* version; the full run was cancelled, so the smoke run's adapter was mounted | §2.2a: upload the adapter as a dataset (`fetch_kaggle_run.py --stage adapter`), pin `EXPECTED_ADAPTER_SHA256` in `baseline_infer.py`; the fetch script and `make_report.py` compare the sha kernel B hashed with the local `final/` before merging or reporting |
+| `fetch_kaggle_run.py` log stops mid-poll, nothing downloaded | laptop slept / terminal closed; the poller is a foreground loop | rerun it — every stage is idempotent; or download by hand with `kaggle kernels output ... -o` |
 | Model echoes the transcript | loss masking not applied | inspect a batch's `labels` (§4.4); the collator `response_template` must match the template's exact header string |
 | `trl` raises on `SFTConfig` / `DataCollatorForCompletionOnlyLM` | version drift | pin `trl==0.12.1`; newer trl replaced the collator with `completion_only_loss=True` in `SFTConfig` — either works, not both |
 | `pad_token` warnings, attention mask all ones | pad = eos with right padding | fine for training; for **batched inference** set `padding_side="left"` |
@@ -476,8 +518,12 @@ Run all of these on the **validation** split before touching test data.
 4. **Quick ROUGE-L on val** (`rouge_score`, stemming on) — not the official number, just a
    sanity gate: ACI-Bench val ≥ 35, MTS-Dialog val ≥ 30.
 5. **Adapter reload test**: in a fresh process, load base + adapter from the saved directory
-   and regenerate one val item; output must be identical to the in-session generation under
-   greedy decoding. This proves §9 actually saved what was trained.
+   and generate. With the two-kernel layout (§2.2a) every generation *is* this test — kernel B
+   has nothing from training in memory — so the check becomes: the adapter's sha256 equals the
+   best-eval checkpoint's (and `train_summary.json`'s), and no output is empty. Byte-identity
+   against an in-session generation is no longer measurable and no longer needed. **The sha256
+   must also be checked against the adapter we actually hold** (`outputs/kaggle/.../final/`):
+   run 2 passed every in-kernel check while running a different adapter (§6, §2.2a).
 6. **Base-model control**: generate the same 5 items with the *unadapted* base model (zero-shot,
    same prompt). The fine-tuned output should be visibly more note-like and shorter. This is a
    free extra row for Person 3's table (baseline row 3 in `MODEL_PLAN.md` §4).
@@ -506,14 +552,36 @@ it. No sampling, no temperature.
 
 ```python
 gen_kwargs = dict(
-    max_new_tokens=768,          # ACI-Bench notes ≈ 420 words ≈ 600 tokens; 768 leaves headroom
+    max_new_tokens=1024,         # ACI-Bench references: p50 ≈ 520, p90 ≈ 840, max ≈ 1,020 tokens. Run 1 used 768 and
+                                 # clipped ~15 % of correct-length notes on top of the repetition loops
     do_sample=False,
     num_beams=1,
-    repetition_penalty=1.1,
+    repetition_penalty=1.2,      # 1.1 did not stop "He has been having some difficulty with X." loops (run 1)
     eos_token_id=[tokenizer.eos_token_id, tokenizer.convert_tokens_to_ids("<|eot_id|>")],
     pad_token_id=tokenizer.eos_token_id,
 )
+# plus a 6-gram repeat block restricted to the GENERATED tokens (GeneratedNoRepeatNGram in baseline_infer.py).
+# HF's no_repeat_ngram_size scans prompt + output, so it would forbid copying "metformin 500 mg twice a day"
+# from the transcript — exactly what a faithful note must do.
 ```
+
+Run 1 (17 Sep, 768 / 1.1 / no n-gram block) for reference: ACI-Bench 30, 29, 31 of 40 truncated,
+len ratio 1.18–1.26, ROUGE-L 17.4–17.9; MTS-Dialog 9 / 200 and 2 / 200 truncated, ROUGE-L 35.8
+/ 33.5. The change above is what kernel B runs; its effect is in `reports/<run>/report.pdf`.
+
+Run 2 (18 Sep, the decoding above, but with the 20-step **smoke** adapter by mistake — §2.2a)
+still says something about the decoding itself: 2 of 770 outputs truncated (1, 0, 1 of 40 on
+ACI-Bench; 0 elsewhere), ACI-Bench len ratio 0.97–1.05 and no repetition loops. So the loop
+problem of run 1 is fixed by the decoding change; the ROUGE numbers of run 2
+(`reports/run2_smoke_adapter_18sep/`) are not baseline numbers and must not be quoted as such.
+
+**Run 3 outcome (19 Sep, evaluated 21 Sep — `docs/PERSON3_EVALUATION.md`).** The decoding above did
+not fix ACI-Bench: 29 / 28 / 27 of 40 notes still hit the 1,024-token cap, now as runaway comma-lists of
+invented terms instead of loops, and every metric moved the wrong way versus run 1 (ACI-Bench ROUGE-L
+17.9 → 11.4, hallucination rate 55 → 78 %; MTS-Dialog ROUGE-L 35.8 → 29.7). Run 1's decoding
+(768 / 1.1 / no block) is therefore the primary baseline in the results tables, and run 3 supplies
+DialogueSOAP and the zero-shot control. Root cause and why no fourth decoding run was made:
+`docs/PERSON2_MODEL_TRAINING.md` §7.
 
 `model.config.use_cache = True` for inference, `tokenizer.padding_side = "left"`, batch size 4
 on L4/A100, 1–2 on T4. Prompt = §4.2 messages **without** the assistant turn, rendered with
@@ -556,20 +624,22 @@ Also produce `zeroshot_base/*.jsonl` with the same schema and `"system": "zerosh
 Directory layout, written to Drive and mirrored to the repo's `outputs/` (git-ignored):
 
 ```
-outputs/baseline_qlora_llama31_8b/
-├── final/                       # trainer.save_model() → adapter only, ~170 MB
+outputs/baseline_qlora_llama31_8b/          # kernel A (train) and kernel B (infer) both write this path; merged on download
+├── final/                       # A: trainer.save_model() → adapter only, ~170 MB (= the best-eval checkpoint)
 │   ├── adapter_config.json
 │   ├── adapter_model.safetensors
 │   ├── tokenizer.json, tokenizer_config.json, special_tokens_map.json
 │   └── README.md                # auto-generated model card; add the base model id
-├── checkpoint-*/                # last 3, with optimizer state, for resume
-├── training_config.json         # see below — the single source of truth
-├── trainer_state.json           # loss curve, best step
-├── environment.txt              # pip freeze
-├── train_manifest.json          # sha256 of baseline_train/val.jsonl + counts per dataset
-└── predictions/
-    ├── baseline_qlora/{split}.jsonl
-    └── zeroshot_base/{split}.jsonl
+├── checkpoints/checkpoint-*/    # A: best + last, with optimizer state, for resume
+├── trainer_state.json           # A: loss curve, best step
+├── train_summary.json           # A: the training half of training_config.json (+ adapter sha256)
+├── environment.txt              # A: pip freeze
+├── training_config.json         # B: train_summary + decoding + validation checks — the single source of truth
+├── environment_infer.txt        # B: pip freeze
+└── predictions/                 # B
+    ├── val_check.jsonl                    # §7 val subset, adapter
+    ├── zeroshot_base/val_check.jsonl      # §7 step 6 control, same items, adapter disabled
+    └── baseline_qlora/{split}.jsonl       # §8, six files
 ```
 
 `training_config.json` — write it by hand from the actual objects, not from memory:
@@ -620,6 +690,8 @@ HANDOFF — plain QLoRA baseline                                   date: ____-__
 [ ] no test id appears in baseline_train.jsonl or baseline_val.jsonl
 [ ] environment.txt present
 ```
+
+Filled-in checklist as of 21 Sep 2026: `docs/PERSON2_MODEL_TRAINING.md` §9.
 
 What Person 3 computes on these files (from the report's success criteria — all of it is their
 scope, none of it is Review 2's): ROUGE-1/2/L, BERTScore, clinical-information coverage,

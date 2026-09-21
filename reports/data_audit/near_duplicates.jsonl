@@ -1,0 +1,12 @@
+{"dataset": "mts_dialog", "id_a": "mts_dialog_train_56", "split_a": "train", "id_b": "mts_dialog_validation_58", "split_b": "validation", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_train_1109", "split_a": "train", "id_b": "mts_dialog_train_256", "split_b": "train", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_train_284", "split_a": "train", "id_b": "mts_dialog_validation_4", "split_b": "validation", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_chat_2023_96", "split_a": "test_chat_2023", "id_b": "mts_dialog_train_318", "split_b": "train", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_sum_2023_78", "split_a": "test_sum_2023", "id_b": "mts_dialog_train_543", "split_b": "train", "hamming": 1}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_train_901", "split_a": "train", "id_b": "mts_dialog_train_989", "split_b": "train", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_sum_2023_59", "split_a": "test_sum_2023", "id_b": "mts_dialog_train_901", "split_b": "train", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_sum_2023_153", "split_a": "test_sum_2023", "id_b": "mts_dialog_train_901", "split_b": "train", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_sum_2023_59", "split_a": "test_sum_2023", "id_b": "mts_dialog_train_989", "split_b": "train", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_sum_2023_153", "split_a": "test_sum_2023", "id_b": "mts_dialog_train_989", "split_b": "train", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_sum_2023_153", "split_a": "test_sum_2023", "id_b": "mts_dialog_test_sum_2023_59", "split_b": "test_sum_2023", "hamming": 0}
+{"dataset": "mts_dialog", "id_a": "mts_dialog_test_chat_2023_106", "split_a": "test_chat_2023", "id_b": "mts_dialog_train_926", "split_b": "train", "hamming": 0}

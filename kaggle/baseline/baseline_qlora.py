@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 """
-Review 2 plain-QLoRA baseline — Kaggle kernel script.
+Review 2 plain-QLoRA baseline — Kaggle TRAINING kernel (kernel A of two).
 
-Implements REVIEW2_BASELINE.md §3–§9 end to end:
+Implements REVIEW2_BASELINE.md §3–§5 and the save step of §9:
   1. pin the training stack, detect GPU / dtype
   2. load base model in 4-bit NF4, attach LoRA r=16/alpha=32
   3. build chat-template prompts, tokenize with assistant-only labels
   4. train (Trainer, paged AdamW 8-bit, cosine, grad checkpointing) with a wall-clock guard
-  5. validation checks: loss, length ratio, quick ROUGE-L, adapter reload test
-  6. greedy generation on the six official test splits -> predictions jsonl (schema §8.3)
-  7. save adapter, training_config.json, trainer_state.json, environment.txt
+  5. save final/ (= best-eval checkpoint), trainer_state.json, train_summary.json, environment.txt
+
+Generation (§7 checks, §8 test splits, training_config.json) lives in kaggle/infer/baseline_infer.py,
+a second kernel that mounts this kernel's output via `kernel_sources`. Splitting gives each half
+its own 12 h Kaggle budget: run 1 (17 Sep) trained for 7.5 h and was then killed by the cap
+while still generating the last test split.
 
 MODE is set below because Kaggle scripts take no arguments:
-  "smoke" — 20 steps on the 64 longest examples, then a handful of generations (~25 min)
-  "full"  — the real run (~5–7 h on a T4)
+  "smoke" — 20 steps on the 64 longest examples (~15 min)
+  "full"  — the real run (2 epochs ≈ 534 steps ≈ 12 h on 2x T4 at ~81 s/step; the guard stops earlier)
 """
 
 # ---- run configuration ---------------------------------------------------------------
@@ -24,9 +27,7 @@ MAX_SEQ_LEN = 4096
 EPOCHS = 2
 LR = 2e-4
 GRAD_ACCUM = 16
-MAX_TRAIN_HOURS = 7.5                # graceful stop so inference + save fit Kaggle's 12 h cap
-MAX_NEW_TOKENS = 768
-GEN_BATCH = 4
+MAX_TRAIN_HOURS = 10.5               # graceful stop; leaves ~1 h of the 12 h cap for setup, the trailing eval and the save
 SEED = 42
 
 # ---- environment ----------------------------------------------------------------------
@@ -91,7 +92,7 @@ if not _hits:
 INPUT = os.path.dirname(_hits[0])
 print(f"[env] dataset at {INPUT}", flush=True)
 OUT = f"/kaggle/working/outputs/{RUN_NAME}" + ("_smoke" if MODE == "smoke" else "")
-os.makedirs(f"{OUT}/predictions/baseline_qlora", exist_ok=True)
+os.makedirs(OUT, exist_ok=True)
 with open(f"{OUT}/environment.txt", "w") as fh:
     fh.write(subprocess.run([sys.executable, "-m", "pip", "freeze"], capture_output=True, text=True).stdout)
 
@@ -115,8 +116,6 @@ def find_file(name):
 train = load_jsonl(find_file("baseline_train.jsonl"))
 val = load_jsonl(find_file("baseline_val.jsonl"))
 manifest = json.load(open(find_file("train_manifest.json")))
-TEST_FILES = ["aci_bench_test_taskB_1", "aci_bench_test_taskC_2", "aci_bench_test_taskC_3",
-              "mts_dialog_test_chat_2023", "mts_dialog_test_sum_2023", "dialogue_soap_test"]
 log(f"data: train {len(train)} | val {len(val)} | mix {manifest['train']['mix']}")
 
 # ---- prompts (REVIEW2_BASELINE.md §4.2) ------------------------------------------------
@@ -258,7 +257,7 @@ class PipelineTrainer(Trainer):
 
 
 steps_per_epoch = math.ceil(len(train_tok) / GRAD_ACCUM)
-eval_every = 100 if MODE == "full" else 10
+eval_every = 200 if MODE == "full" else 10   # 220-item eval ≈ 4.6 min on 2x T4
 args = TrainingArguments(
     output_dir=f"{OUT}/checkpoints",
     per_device_train_batch_size=1, per_device_eval_batch_size=1,
@@ -292,98 +291,10 @@ trainer.state.save_to_json(f"{OUT}/trainer_state.json")
 best = min((e for e in trainer.state.log_history if "eval_loss" in e), key=lambda e: e["eval_loss"], default={})
 log(f"adapter saved | best eval_loss {best.get('eval_loss')} at step {best.get('step')} | peak VRAM {peak_gb:.1f} GB")
 
-
-# ---- generation (§8) --------------------------------------------------------------------
-model.config.use_cache = True
-model.eval()
-tokenizer.padding_side = "left"
-GEN = dict(max_new_tokens=MAX_NEW_TOKENS, do_sample=False, num_beams=1, repetition_penalty=1.1,
-           eos_token_id=EOS_IDS, pad_token_id=tokenizer.eos_token_id)
-
-
-@torch.no_grad()
-def generate(records, system_name, adapter_name):
-    out = []
-    for i in range(0, len(records), GEN_BATCH):
-        batch = records[i:i + GEN_BATCH]
-        texts = [tokenizer.apply_chat_template(prompt_messages(r), tokenize=False, add_generation_prompt=True)
-                 for r in batch]
-        enc = tokenizer(texts, return_tensors="pt", padding=True, add_special_tokens=False).to(model.device)
-        gen = model.generate(**enc, **GEN)
-        for r, row in zip(batch, gen[:, enc["input_ids"].shape[1]:]):
-            toks = row.tolist()
-            cut = next((k for k, t in enumerate(toks) if t in EOS_IDS), len(toks))
-            out.append({
-                "id": r["id"], "dataset": r["dataset"], "split": r["split"],
-                "source_dialogue": r["source_dialogue"], "reference_summary": r["target_summary"],
-                "prediction": tokenizer.decode(toks[:cut], skip_special_tokens=True).strip(),
-                "model": MODEL_ID, "adapter": adapter_name, "system": system_name,
-                "decoding": {"max_new_tokens": MAX_NEW_TOKENS, "do_sample": False, "repetition_penalty": 1.1},
-                "prompt_tokens": int(enc["attention_mask"][0].sum()), "generated_tokens": cut,
-                "truncated": cut >= MAX_NEW_TOKENS,
-            })
-        if (i // GEN_BATCH) % 10 == 0:
-            log(f"  gen {system_name} {len(out)}/{len(records)}")
-    return out
-
-
-def write_preds(preds, path):
-    with open(path, "w", encoding="utf-8") as fh:
-        for p in preds:
-            fh.write(json.dumps(p, ensure_ascii=False) + "\n")
-
-
-# §7 validation checks
-scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
-val_subset = val if MODE == "smoke" else [r for r in val if r["dataset"] == "aci_bench"][:10] + \
-                                        [r for r in val if r["dataset"] == "mts_dialog"][:10]
-val_preds = generate(val_subset, "baseline_qlora", f"{RUN_NAME}/final")
-val_checks = {
-    "n": len(val_preds),
-    "rougeL_f": float(np.mean([scorer.score(p["reference_summary"], p["prediction"])["rougeL"].fmeasure for p in val_preds])),
-    "length_ratio": float(np.mean([len(p["prediction"].split()) / max(1, len(p["reference_summary"].split())) for p in val_preds])),
-    "truncated": sum(p["truncated"] for p in val_preds),
-    "empty": sum(1 for p in val_preds if not p["prediction"]),
-}
-log(f"val checks: {val_checks}")
-write_preds(val_preds, f"{OUT}/predictions/val_check.jsonl")
-for p in val_preds[:2]:
-    print("=" * 80, f"\n[{p['id']}] REFERENCE:\n{p['reference_summary'][:600]}\n--- PREDICTION:\n{p['prediction'][:600]}", flush=True)
-
-# test splits
-for name in TEST_FILES:
-    recs = load_jsonl(find_file(f"{name}.jsonl"))
-    if MODE == "smoke":
-        recs = recs[:2]
-    preds = generate(recs, "baseline_qlora", f"{RUN_NAME}/final")
-    write_preds(preds, f"{OUT}/predictions/baseline_qlora/{name}.jsonl")
-    log(f"wrote {name}: {len(preds)} preds, truncated {sum(p['truncated'] for p in preds)}")
-
-# §7 step 5 adapter reload test (fresh PeftModel on the same base, greedy -> must match)
-# Two things must match the in-session model for byte-identical greedy output (smoke v8, 14 Sep,
-# reported MISMATCH): prepare_model_for_kbit_training upcast the non-quantised params (embeddings,
-# RMSNorm, lm_head) to fp32, so the residual stream ran in fp32 during training-side generation, and
-# val item #0 was generated inside a left-padded batch of GEN_BATCH, not alone. Free the trainer too:
-# it still references the first model, and two 8B loads plus fp32 heads would not fit on 2x T4.
-steps_completed = trainer.state.global_step
-del trainer, model; import gc; gc.collect(); torch.cuda.empty_cache()
-base = AutoModelForCausalLM.from_pretrained(MODEL_ID, quantization_config=bnb, device_map=DEVICE_MAP,
-                                            torch_dtype=COMPUTE_DTYPE, attn_implementation="sdpa")
-for p_ in base.parameters():
-    if p_.dtype in (torch.float16, torch.bfloat16):
-        p_.data = p_.data.to(torch.float32)
-model = PeftModel.from_pretrained(base, f"{OUT}/final").eval()
-model.config.use_cache = True
-reload_preds = generate(val_subset[:GEN_BATCH], "baseline_qlora", f"{RUN_NAME}/final")
-reload_identical = sum(a["prediction"] == b["prediction"] for a, b in zip(reload_preds, val_preds))
-reload_rougeL = float(np.mean([scorer.score(a["prediction"], b["prediction"])["rougeL"].fmeasure
-                               for a, b in zip(reload_preds, val_preds)]))
-reload_ok = reload_preds[0]["prediction"] == val_preds[0]["prediction"]
-log(f"adapter reload test: {'PASS' if reload_ok else 'MISMATCH'} | identical {reload_identical}/{len(reload_preds)} "
-    f"| rougeL(reload vs in-session) {reload_rougeL:.4f}")
-
-# ---- training_config.json (§9) -------------------------------------------------------------
-config = {
+# ---- train_summary.json (§9, training half) ----------------------------------------------
+# The inference kernel merges this with its decoding / validation results into training_config.json.
+# final/ is the best-eval checkpoint (load_best_model_at_end), so record which step that was.
+summary = {
     "run_name": RUN_NAME, "mode": MODE, "system": "baseline_qlora",
     "base_model": MODEL_ID, "base_model_note": "ungated mirror of meta-llama/Llama-3.1-8B-Instruct (Llama 3.1 Community Licence)",
     "quantization": {"load_in_4bit": True, "quant_type": "nf4", "double_quant": True, "compute_dtype": str(COMPUTE_DTYPE)},
@@ -394,25 +305,24 @@ config = {
     "prompt": {"system": SYSTEM, "task_instruction": TASK, "mts_section_names": MTS_SECTIONS, "loss_on": "assistant_only"},
     "training": {"liger_fused_ce": USE_LIGER, "batch_size": 1, "grad_accum": GRAD_ACCUM, "epochs": EPOCHS, "max_steps": args.max_steps, "lr": LR,
                  "scheduler": "cosine", "warmup_ratio": 0.03, "optim": "paged_adamw_8bit", "seed": SEED,
-                 "steps_completed": steps_completed, "best_step": best.get("step"),
-                 "best_eval_loss": best.get("eval_loss"), "final_train_loss": train_result.metrics.get("train_loss"),
-                 "wall_clock_guard_hours": MAX_TRAIN_HOURS},
+                 "eval_every": eval_every, "planned_steps": steps_per_epoch * EPOCHS,
+                 "steps_completed": trainer.state.global_step, "epochs_completed": round(trainer.state.epoch or 0, 3),
+                 "best_step": best.get("step"), "best_eval_loss": best.get("eval_loss"),
+                 "final_train_loss": train_result.metrics.get("train_loss"),
+                 "train_runtime_h": round(train_result.metrics.get("train_runtime", 0) / 3600, 2),
+                 "sec_per_step": round(train_result.metrics.get("train_runtime", 0) / max(1, trainer.state.global_step), 1),
+                 "wall_clock_guard_hours": MAX_TRAIN_HOURS,
+                 "wall_clock_guard_hit": trainer.state.global_step < trainer.state.max_steps},
     "hardware": {"gpu": GPU, "n_gpu": N_GPU, "device_map": str(DEVICE_MAP), "vram_gb_total": round(VRAM_GB, 1),
                  "peak_vram_gb_per_gpu": round(peak_gb, 2),
                  "wall_time_h": round((time.time() - T0) / 3600, 2)},
-    "decoding": GEN | {"eos_token_id": EOS_IDS},
-    "validation_checks": val_checks | {"adapter_reload_identical": reload_ok,
-                                       "adapter_reload_identical_n": f"{reload_identical}/{len(reload_preds)}",
-                                       "adapter_reload_rougeL_vs_in_session": round(reload_rougeL, 4),
-                                       "adapter_reload_note": "reload upcasts non-quantised params to fp32 like "
-                                                              "prepare_model_for_kbit_training; a plain fp16 reload "
-                                                              "gives near-identical but not byte-identical text"},
     "versions": {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__,
                  "bitsandbytes": bitsandbytes.__version__, "python": sys.version.split()[0]},
+    "adapter_sha256": hashlib.sha256(open(f"{OUT}/final/adapter_model.safetensors", "rb").read()).hexdigest(),
 }
-json.dump(config, open(f"{OUT}/training_config.json", "w"), indent=2, default=str)
+json.dump(summary, open(f"{OUT}/train_summary.json", "w"), indent=2, default=str)
 
-# keep the output under Kaggle's size limit: checkpoints carry optimizer state we no longer need
-subprocess.run(["rm", "-rf", f"{OUT}/checkpoints"])
+# Checkpoints stay (best + last, ~260 MB each): the last one carries optimizer/scheduler/rng state, so a
+# follow-up kernel can `trainer.train(resume_from_checkpoint=...)` if the guard stopped this run early.
 log(f"DONE -> {OUT}")
-print(json.dumps({k: config[k] for k in ("training", "hardware", "validation_checks")}, indent=2, default=str))
+print(json.dumps({k: summary[k] for k in ("training", "hardware")}, indent=2, default=str))

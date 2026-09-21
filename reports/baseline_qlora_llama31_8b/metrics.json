@@ -1,0 +1,870 @@
+{
+  "run_dir": "D:\\OneDrive\\Documents\\B.Tech\\3rd Year\\AI\\Projects\\medsum-fact\\outputs\\kaggle\\outputs\\baseline_qlora_llama31_8b",
+  "generated_at": "2026-09-21T21:36:23",
+  "config": {
+    "run_name": "baseline_qlora_llama31_8b",
+    "mode": "full",
+    "system": "baseline_qlora",
+    "base_model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+    "base_model_note": "ungated mirror of meta-llama/Llama-3.1-8B-Instruct (Llama 3.1 Community Licence)",
+    "quantization": {
+      "load_in_4bit": true,
+      "quant_type": "nf4",
+      "double_quant": true,
+      "compute_dtype": "torch.float16"
+    },
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "trainable_params": 41943040,
+      "total_params": 8072204288
+    },
+    "data": {
+      "train": "baseline_train.jsonl",
+      "val": "baseline_val.jsonl",
+      "manifest": {
+        "seed": 42,
+        "train": {
+          "file": "baseline_train.jsonl",
+          "n": 4265,
+          "sha256": "7aeea735a83a0269e55e083455d0191bba3bea8fbf9a6edd9820d775169fb11a",
+          "mix": {
+            "dialogue_soap": 3000,
+            "mts_dialog": 1198,
+            "aci_bench": 67
+          }
+        },
+        "val": {
+          "file": "baseline_val.jsonl",
+          "n": 220,
+          "sha256": "0fc35d7d11f13482568b611597a0cfea3dcebcc4ac0fc1ae0fa5e1f4e2e1ae5c",
+          "mix": {
+            "aci_bench": 20,
+            "mts_dialog": 100,
+            "dialogue_soap": 100
+          }
+        },
+        "test": {
+          "aci_bench/test_taskB_1": 40,
+          "aci_bench/test_taskC_2": 40,
+          "aci_bench/test_taskC_3": 40,
+          "mts_dialog/test_chat_2023": 200,
+          "mts_dialog/test_sum_2023": 200,
+          "dialogue_soap/test": 250
+        },
+        "leakage_check": {
+          "id_overlap": 0,
+          "dropped_for_verbatim_overlap_with_test": [
+            "mts_dialog_train_989",
+            "mts_dialog_train_926",
+            "mts_dialog_train_901"
+          ],
+          "duplicate_dialogues_within_train": 1,
+          "status": "passed"
+        }
+      },
+      "n_train_used": 4265,
+      "n_val_used": 220,
+      "max_seq_length": 4096
+    },
+    "prompt": {
+      "system": "You are a clinical documentation assistant. Given the transcript of a doctor-patient consultation, write the clinical note. Include only information stated in the transcript.",
+      "task_instruction": {
+        "aci_bench": "Write the complete clinical note for this encounter, using upper-case section headers such as CHIEF COMPLAINT, HISTORY OF PRESENT ILLNESS, REVIEW OF SYSTEMS, PHYSICAL EXAM, RESULTS, ASSESSMENT AND PLAN as applicable.",
+        "dialogue_soap": "Write a SOAP note with four paragraphs labelled S:, O:, A:, P: (Subjective, Objective, Assessment, Plan).",
+        "mts_dialog": "Write the {section} section of the clinical note."
+      },
+      "mts_section_names": {
+        "FAM/SOCHX": "FAMILY HISTORY / SOCIAL HISTORY",
+        "GENHX": "HISTORY OF PRESENT ILLNESS",
+        "PASTMEDICALHX": "PAST MEDICAL HISTORY",
+        "CC": "CHIEF COMPLAINT",
+        "PASTSURGICAL": "PAST SURGICAL HISTORY",
+        "ALLERGY": "ALLERGIES",
+        "ROS": "REVIEW OF SYSTEMS",
+        "MEDICATIONS": "MEDICATIONS",
+        "ASSESSMENT": "ASSESSMENT",
+        "EXAM": "PHYSICAL EXAM",
+        "DIAGNOSIS": "DIAGNOSIS",
+        "DISPOSITION": "DISPOSITION",
+        "PLAN": "PLAN",
+        "EDCOURSE": "EMERGENCY DEPARTMENT COURSE",
+        "IMMUNIZATIONS": "IMMUNIZATIONS",
+        "IMAGING": "IMAGING",
+        "GYNHX": "GYNECOLOGIC HISTORY",
+        "PROCEDURES": "PROCEDURES",
+        "OTHER_HISTORY": "OTHER HISTORY",
+        "LABS": "LABS"
+      },
+      "loss_on": "assistant_only"
+    },
+    "training": {
+      "liger_fused_ce": true,
+      "batch_size": 1,
+      "grad_accum": 16,
+      "epochs": 2,
+      "max_steps": 534,
+      "lr": 0.0002,
+      "scheduler": "cosine",
+      "warmup_ratio": 0.03,
+      "optim": "paged_adamw_8bit",
+      "seed": 42,
+      "eval_every": 100,
+      "planned_steps": 534,
+      "steps_completed": 332,
+      "epochs_completed": 1.244,
+      "best_step": 200,
+      "best_eval_loss": 0.9555336236953735,
+      "final_train_loss": 0.7402575884956911,
+      "train_runtime_h": 7.47,
+      "wall_clock_guard_hours": 7.5,
+      "wall_clock_guard_hit": true,
+      "note": "train_summary.json absent: this adapter came from the single-kernel run of 17 Sep 2026 (killed by the 12 h cap after training)"
+    },
+    "hardware": {
+      "gpu": "2x Tesla T4",
+      "n_gpu": 2,
+      "device_map": "balanced",
+      "vram_gb_total": 29.1,
+      "peak_vram_gb_per_gpu": null,
+      "wall_time_h": null
+    },
+    "versions": {},
+    "training_kernel": "hirthick17/medsum-baseline-qlora",
+    "inference_kernel": "hirthick17/medsum-baseline-infer",
+    "hardware_inference": {
+      "gpu": "2x Tesla T4",
+      "n_gpu": 2,
+      "device_map": "balanced",
+      "vram_gb_total": 29.1,
+      "peak_vram_gb_per_gpu": 10.49,
+      "wall_time_h": 5.37
+    },
+    "versions_inference": {
+      "torch": "2.10.0+cu128",
+      "transformers": "4.57.6",
+      "peft": "0.19.1",
+      "bitsandbytes": "0.50.2",
+      "python": "3.12.13"
+    },
+    "decoding": {
+      "max_new_tokens": 1024,
+      "do_sample": false,
+      "num_beams": 1,
+      "repetition_penalty": 1.2,
+      "no_repeat_ngram_size_generated_only": 6,
+      "eos_token_id": [
+        128009
+      ],
+      "batch": 4,
+      "adapter": "final",
+      "non_quantised_params_fp32": true
+    },
+    "validation_checks": {
+      "n": 20,
+      "rougeL_f": 0.14662857159784176,
+      "rougeL_f_by_dataset_x100": {
+        "aci_bench": 10.5,
+        "mts_dialog": 18.8
+      },
+      "length_ratio": 1.2895798855580844,
+      "truncated": 9,
+      "empty": 0,
+      "adapter_reload_fresh_process": true,
+      "adapter_sha256": "14e712617f1456b669ef02e6c512e41464dbeee450bbed6245045cb568b69481",
+      "adapter_matches_checkpoint": null,
+      "adapter_matches_train_summary": null,
+      "adapter_reload_note": "generation runs in a separate kernel from training (fresh base + PeftModel.from_pretrained), which is the \u00a77 step 5 reload test itself; non-quantised params upcast to fp32 as in training",
+      "zeroshot_base_control": {
+        "n": 20,
+        "rougeL_f": 0.21198232676418152,
+        "rougeL_f_by_dataset_x100": {
+          "aci_bench": 26.6,
+          "mts_dialog": 15.8
+        },
+        "length_ratio": 2.781255929782229,
+        "truncated": 0,
+        "empty": 0
+      }
+    },
+    "test_stats": {
+      "aci_bench_test_taskB_1": {
+        "n": 40,
+        "truncated": 29,
+        "rougeL_x100": 11.4
+      },
+      "aci_bench_test_taskC_2": {
+        "n": 40,
+        "truncated": 28,
+        "rougeL_x100": 10.9
+      },
+      "aci_bench_test_taskC_3": {
+        "n": 40,
+        "truncated": 27,
+        "rougeL_x100": 12.3
+      },
+      "mts_dialog_test_chat_2023": {
+        "n": 200,
+        "truncated": 5,
+        "rougeL_x100": 29.7
+      },
+      "mts_dialog_test_sum_2023": {
+        "n": 200,
+        "truncated": 6,
+        "rougeL_x100": 28.6
+      },
+      "dialogue_soap_test": {
+        "n": 250,
+        "truncated": 7,
+        "rougeL_x100": 29.7
+      }
+    }
+  },
+  "trainer_state": {
+    "global_step": 332,
+    "epoch": 1.2439024390243902,
+    "best_metric": 0.9555336236953735,
+    "best_model_checkpoint": "/kaggle/working/outputs/baseline_qlora_llama31_8b/checkpoints/checkpoint-200",
+    "max_steps": 534,
+    "num_train_epochs": 2
+  },
+  "curves": {
+    "train": [
+      [
+        10,
+        0.727
+      ],
+      [
+        20,
+        0.6307
+      ],
+      [
+        30,
+        0.5947
+      ],
+      [
+        40,
+        0.8628
+      ],
+      [
+        50,
+        1.4291
+      ],
+      [
+        60,
+        0.6269
+      ],
+      [
+        70,
+        0.5511
+      ],
+      [
+        80,
+        0.5472
+      ],
+      [
+        90,
+        1.0759
+      ],
+      [
+        100,
+        1.2815
+      ],
+      [
+        110,
+        0.6298
+      ],
+      [
+        120,
+        0.5337
+      ],
+      [
+        130,
+        0.5334
+      ],
+      [
+        140,
+        0.8974
+      ],
+      [
+        150,
+        1.2967
+      ],
+      [
+        160,
+        0.6462
+      ],
+      [
+        170,
+        0.5104
+      ],
+      [
+        180,
+        0.5123
+      ],
+      [
+        190,
+        0.8819
+      ],
+      [
+        200,
+        1.2739
+      ],
+      [
+        210,
+        0.5662
+      ],
+      [
+        220,
+        0.5093
+      ],
+      [
+        230,
+        0.5259
+      ],
+      [
+        240,
+        0.7914
+      ],
+      [
+        250,
+        1.1997
+      ],
+      [
+        260,
+        0.5317
+      ],
+      [
+        270,
+        0.9319
+      ],
+      [
+        280,
+        0.4383
+      ],
+      [
+        290,
+        0.4389
+      ],
+      [
+        300,
+        0.4458
+      ],
+      [
+        310,
+        0.8886
+      ],
+      [
+        320,
+        0.739
+      ],
+      [
+        330,
+        0.4232
+      ]
+    ],
+    "eval": [
+      [
+        100,
+        1.1180459260940552
+      ],
+      [
+        200,
+        0.9555336236953735
+      ],
+      [
+        300,
+        0.9614461064338684
+      ]
+    ],
+    "lr": [
+      [
+        10,
+        0.00010588235294117647
+      ],
+      [
+        20,
+        0.00019999261512226556
+      ],
+      [
+        30,
+        0.0001997342589099982
+      ],
+      [
+        40,
+        0.000199107748815478
+      ],
+      [
+        50,
+        0.00019811539750564703
+      ],
+      [
+        60,
+        0.0001967608680947778
+      ],
+      [
+        70,
+        0.00019504916062264283
+      ],
+      [
+        80,
+        0.00019298659359762667
+      ],
+      [
+        90,
+        0.00019058078067291095
+      ],
+      [
+        100,
+        0.00018784060254182903
+      ],
+      [
+        110,
+        0.00018477617415613412
+      ],
+      [
+        120,
+        0.00018139880738818998
+      ],
+      [
+        130,
+        0.0001777209692749105
+      ],
+      [
+        140,
+        0.0001737562359975848
+      ],
+      [
+        150,
+        0.00016951924276746425
+      ],
+      [
+        160,
+        0.0001650256298021009
+      ],
+      [
+        170,
+        0.00016029198459185787
+      ],
+      [
+        180,
+        0.00015533578066970574
+      ],
+      [
+        190,
+        0.00015017531311032717
+      ],
+      [
+        200,
+        0.00014482963099662487
+      ],
+      [
+        210,
+        0.00013931846710292295
+      ],
+      [
+        220,
+        0.00013366216505442477
+      ],
+      [
+        230,
+        0.00012788160423180762
+      ],
+      [
+        240,
+        0.00012199812269815736
+      ],
+      [
+        250,
+        0.00011603343843274656
+      ],
+      [
+        260,
+        0.00011000956916240985
+      ],
+      [
+        270,
+        0.00010394875108644608
+      ],
+      [
+        280,
+        9.787335679506336e-05
+      ],
+      [
+        290,
+        9.180581268435696e-05
+      ],
+      [
+        300,
+        8.57685161726715e-05
+      ],
+      [
+        310,
+        7.978375302392986e-05
+      ],
+      [
+        320,
+        7.387361508311735e-05
+      ],
+      [
+        330,
+        6.805991872758866e-05
+      ]
+    ]
+  },
+  "validation_checks": {
+    "n": 20,
+    "rougeL_f": 0.14662857159784176,
+    "rougeL_f_by_dataset_x100": {
+      "aci_bench": 10.5,
+      "mts_dialog": 18.8
+    },
+    "length_ratio": 1.2895798855580844,
+    "truncated": 9,
+    "empty": 0,
+    "adapter_reload_fresh_process": true,
+    "adapter_sha256": "14e712617f1456b669ef02e6c512e41464dbeee450bbed6245045cb568b69481",
+    "adapter_matches_checkpoint": null,
+    "adapter_matches_train_summary": null,
+    "adapter_reload_note": "generation runs in a separate kernel from training (fresh base + PeftModel.from_pretrained), which is the \u00a77 step 5 reload test itself; non-quantised params upcast to fp32 as in training",
+    "zeroshot_base_control": {
+      "n": 20,
+      "rougeL_f": 0.21198232676418152,
+      "rougeL_f_by_dataset_x100": {
+        "aci_bench": 26.6,
+        "mts_dialog": 15.8
+      },
+      "length_ratio": 2.781255929782229,
+      "truncated": 0,
+      "empty": 0
+    }
+  },
+  "val_by_dataset": {
+    "aci_bench": {
+      "n": 10,
+      "rouge1_f": 19.83419470922293,
+      "rouge2_f": 5.53713172670286,
+      "rougeL_f": 10.53779104305804,
+      "rougeL_f_std": 5.741069227594015,
+      "length_ratio": 1.212982410980127,
+      "mean_generated_tokens": 997.0,
+      "truncated": 9,
+      "empty": 0,
+      "mean_pred_words": 458.0,
+      "mean_ref_words": 450.4
+    },
+    "mts_dialog": {
+      "n": 10,
+      "rouge1_f": 22.089842030033687,
+      "rouge2_f": 6.6159903860666125,
+      "rougeL_f": 18.787923276510316,
+      "rougeL_f_std": 13.416413156873851,
+      "length_ratio": 1.3661773601360419,
+      "mean_generated_tokens": 35.6,
+      "truncated": 0,
+      "empty": 0,
+      "mean_pred_words": 27.0,
+      "mean_ref_words": 42.6
+    }
+  },
+  "val_gates": {
+    "aci_bench": {
+      "rougeL_f": 10.53779104305804,
+      "gate": 35.0,
+      "pass": false
+    },
+    "mts_dialog": {
+      "rougeL_f": 18.787923276510316,
+      "gate": 30.0,
+      "pass": false
+    }
+  },
+  "test_splits": {
+    "aci_bench_test_taskB_1": {
+      "n": 40,
+      "rouge1_f": 21.876574428622327,
+      "rouge2_f": 6.557729799974127,
+      "rougeL_f": 11.393456921083027,
+      "rougeL_f_std": 5.749353786852614,
+      "length_ratio": 1.2613510953532607,
+      "mean_generated_tokens": 895.25,
+      "truncated": 29,
+      "empty": 0,
+      "mean_pred_words": 459.45,
+      "mean_ref_words": 415.3,
+      "json_errors": 0,
+      "headline": true,
+      "missing": false
+    },
+    "aci_bench_test_taskC_2": {
+      "n": 40,
+      "rouge1_f": 20.891724042390695,
+      "rouge2_f": 6.154886371781329,
+      "rougeL_f": 10.913541990098352,
+      "rougeL_f_std": 5.02685040963448,
+      "length_ratio": 1.0901656000067912,
+      "mean_generated_tokens": 916.2,
+      "truncated": 28,
+      "empty": 0,
+      "mean_pred_words": 439.125,
+      "mean_ref_words": 437.65,
+      "json_errors": 0,
+      "headline": true,
+      "missing": false
+    },
+    "aci_bench_test_taskC_3": {
+      "n": 40,
+      "rouge1_f": 23.041354858419833,
+      "rouge2_f": 7.195019584679244,
+      "rougeL_f": 12.314149523815987,
+      "rougeL_f_std": 7.634444406964083,
+      "length_ratio": 1.001758662507304,
+      "mean_generated_tokens": 886.9,
+      "truncated": 27,
+      "empty": 0,
+      "mean_pred_words": 415.725,
+      "mean_ref_words": 439.825,
+      "json_errors": 0,
+      "headline": true,
+      "missing": false
+    },
+    "mts_dialog_test_chat_2023": {
+      "n": 200,
+      "rouge1_f": 34.841962495333675,
+      "rouge2_f": 13.660128538401478,
+      "rougeL_f": 29.652643321657234,
+      "rougeL_f_std": 25.724007697666302,
+      "length_ratio": 1.8455660923830477,
+      "mean_generated_tokens": 77.69,
+      "truncated": 5,
+      "empty": 0,
+      "mean_pred_words": 42.225,
+      "mean_ref_words": 38.46,
+      "json_errors": 0,
+      "headline": true,
+      "missing": false
+    },
+    "mts_dialog_test_sum_2023": {
+      "n": 200,
+      "rouge1_f": 34.058890316883925,
+      "rouge2_f": 11.342171157074972,
+      "rougeL_f": 28.595929690136966,
+      "rougeL_f_std": 24.55606057401728,
+      "length_ratio": 1.3638029761436263,
+      "mean_generated_tokens": 70.285,
+      "truncated": 6,
+      "empty": 0,
+      "mean_pred_words": 36.425,
+      "mean_ref_words": 39.635,
+      "json_errors": 0,
+      "headline": true,
+      "missing": false
+    },
+    "dialogue_soap_test": {
+      "n": 250,
+      "rouge1_f": 46.65120982094219,
+      "rouge2_f": 16.37026627441875,
+      "rougeL_f": 29.72940247094905,
+      "rougeL_f_std": 7.182872986759804,
+      "length_ratio": 0.9746468183799083,
+      "mean_generated_tokens": 352.696,
+      "truncated": 7,
+      "empty": 0,
+      "mean_pred_words": 235.492,
+      "mean_ref_words": 246.304,
+      "json_errors": 0,
+      "headline": false,
+      "missing": false
+    }
+  },
+  "samples": {
+    "aci_bench_test_taskB_1": {
+      "id": "aci_bench_test_taskB_1_D2N099-virtscribe",
+      "dataset": "aci_bench",
+      "split": "test_taskB_1",
+      "source_dialogue": "[doctor] next patient is randy gutierrez . date of birth , 8/10/2020 . please use review of symptoms . all text to write . physical exam , auto text uri .\n[doctor] hello , how are you doing today ?\n[patient_guest] we're okay , thank you .\n[doctor] that's good to hear . so , how many days has randy been feeling sick ?\n[patient_guest] well , i would say it started around supper time last night .\n[doctor] last night , okay , and what's been going on ?\n[patient_guest] well , he started to get a runny nose .\n[doctor] okay , and is he stuffy too ?\n[patient_guest] yeah . yeah .\n[doctor] okay , and have you noticed , is his mucous clear right now ?\n[patient_guest] it is , it is right now , yes .\n[doctor] okay . and , does he also have a cough ?\n[patient_guest] yes , but it's not barky .\n[doctor] and does he act like he has a sore throat or is he pulling on his ears ?\n[patient_guest] well , i know he's been pulling on his ears , yeah .\n[doctor] okay .\n[patient_guest] you know , he also , he's also been going crazy rubbing at his nose too .\n[doctor] okay . and , any fever you've noticed ?\n[patient_guest] i checked his rectal temperature and it was 100.3 .\n[doctor] okay . so , a little bit of a low-grade fever there , definitely . and , how was his appetite ? did he eat last night ?\n[patient_guest] yes , he did . yeah .\n[doctor] and how about this morning ? did he eat his breakfast ?\n[patient_guest] uh , this morning he ate about seven ounces from the bottle .\n[doctor] okay .\n[patient_guest] and then he got another bottle , and he barely ate that . um , i offered him cereal and he would n't eat that either .\n[doctor] okay .\n[patient_guest] so , he varies i guess .\n[doctor] how is his energy ? does he seem like he wants to take more naps , or does he have pretty good energy ?\n[patient_guest] mmm , it seems like he's irritable .\n[doctor] irritable because he is n't feeling good ?\n[patient_guest] yeah . he is energetic , but it seems like he ca n't go to sleep , like , he's fighting it really hard .\n[doctor] okay , and just for the chart , is there anyone , anybody else exposed to him who has been sick ?\n[patient_guest] yes , his older sister's been sick .\n[doctor] thank you .\n[patient_guest] we also had a play date with my nephew , who i learned later had a sinus infection .\n[doctor] and what medication have you tried for him ? anything at all ?\n[patient_guest] um , i've been doing the saline mist in his nose .\n[doctor] good , good . that's a good choice .\n[patient_guest] i did give him tylenol really early this morning because he was warm when i took the sleeper off of him , and we had the ac on in the house , but his whole body was sweating .\n[doctor] i see . and , any other medications ?\n[patient_guest] we did put some baby vick's on his feet last night to try and help him breathe . and , i also used the humidifier .\n[doctor] okay . that's good .\n[patient_guest] okay . okay .\n[doctor] so , there was another thing i wanted to bring up since we're here . it appears that his cradle cap has gotten a little worse . what are you using on it ?\n[patient_guest] i've been using the cradle cap brush , and then i use regular aveno shampoo .\n[doctor] is it a dandruff shampoo ?\n[patient_guest] no , i do n't think so .\n[doctor] okay , thank you . well , let's complete his exam and then we'll talk about the next steps .\n[patient_guest] okay , sounds good .\n[doctor] can you take a big breath randy .\n[patient_guest] where's mama ?\n[doctor] do n't forget to breathe little one . okay . let's try the front too .\n[patient_guest] yeah , it's okay buddy .\n[doctor] excellent . he's doing excellent . next let's- let's check out those ears .\n[patient_guest] okay .\n[doctor] let's try to make sure you do n't tip all the way over .\n[patient_guest] dino , you're doing so good .\n[doctor] all right . ears look okay . we're going to slide you forward so you do n't bump your head when i lay you down .\n[patient_guest] hey , you're- hey you're okay . you're okay .\n[doctor] okay , you can go ahead and sit him back up if you like .\n[patient_guest] all right . thank you .\n[doctor] all right . so , he's just kind of getting started with this , and i think we're seeing something viral right now . often sinus infections will start out as a virus and then will become bacterial infections if left alone and does n't go away . but , i do n't think he needs any antibiotics , at least not at this point in time . um , keep up with the fluids , rest , and i would watch him very carefully for a barking cough . if he does get a barky cough , then that tends to be a little bit more significant and a little more severe . so , if he develops a barky cough , i want you to give him a half a teaspoon of his sister's medicine .\n[doctor] you know , i'm almost tempted to give you some of the medicine because they're probably sharing the same virus .\n[patient_guest] okay .\n[doctor] actually , i will . i'll go ahead and just give you some as well .\n[patient_guest] okay . okay .\n[doctor] but , if he does n't become barky , you do n't have to use it . it only works for the barky cough .\n[patient_guest] mm-hmm , got it .\n[doctor] okay . we'll do the same thing with him , as long as nothing gets worse , and we'll see him back in one week . so , it wo n't get rid of a regular cough . he can use zarbee's , but use the dose for kids under a year of age . so , if you wan na get some of that , you can definitely try that for him , it can help out a little bit with the regular cough .\n[patient_guest] i do have a question . do you or do you not give honey to babies ?\n[doctor] yes , that's a great question . you do n't give honey to kids under a year , instead , you can give them agave , which is a different type of nectar . um , now you can give honey to his older sister , that is okay , but for him , it would not be very good because his stomach acid's not good enough to break down the botulism spores . so , it'd cause him harm . um , you should look at the package of say , honey nut cheerios . it says right on there to not give it to a baby .\n[patient_guest] okay .\n[doctor] now , whether that would really hurt a baby , i am unsure , but it has real honey in it . so , no honey for him , but agave is definitely fine .\n[patient_guest] okay . so , zarbee's for the stuffy nose .\n[doctor] yes , zarbee's .\n[patient_guest] and then you said , uh , which medicine to give him just in case ?\n[doctor] i'm gon na give him the same medicine as his sister , and just hang onto it , um , just to watch and see . if this was a monday and we had a whole week to watch , i would say to just call us if things got worse , um , but since , um , if it's gon na be the weekend , and things might worsen tonight or tomorrow night , i'd rather you have just what you need on hand .\n[patient_guest] okay .\n[doctor] right , does that make sense ?\n[patient_guest] yeah , yeah . that makes sense .\n[doctor] okay , great . and that way you do n't have to share , um , with his sister .\n[patient_guest] right , okay .\n[doctor] and since he's about half her size , we'll do half the dose , which is a half a teaspoon .\n[patient_guest] okay . will this information all be in the papers ?\n[doctor] yes . and so , if he ends up starting the medicine , just give him a half a teaspoon for five days .\n[patient_guest] okay .\n[doctor] yeah , that's the only thing it wo n't say is , \" as needed , \" or anything like that .\n[patient_guest] mm-hmm , understood , thank you .\n[doctor] you're welcome .\n[patient_guest] and the cradle cap ?\n[doctor] what i would do is use something like either head & shoulder's , or selsun blue , or nizoral ad . now , do n't get the extra strength stuff , just use the regular strength . um , cradle cap , it's just basically a fancy way of saying dandruff . so , those shampoos will help get rid of it . it's not an immediate thing 'cause they , um , they are all dead scales , and you still have to brush them off . so , continue to use the soft brush and some baby oil , or something that will help get the scales out , and those shampoos will actually help to prevent it as well . use it two times per week , not every day , but maybe twice a week .\n[doctor] so , two days between shampooing , use what you normally use any other time . and then , often , within six weeks or so , you'll notice that the-the cradle cap is just , um , not coming back anymore . but , he has to be careful because it's not ph balanced for eyes . so , just make sure when you're rinsing his hair you avoid his eyes .\n[patient_guest] okay . okay .\n[doctor] all right . and , if it keeps getting worse , definitely let us know .\n[patient_guest] okay . sounds good .\n[doctor] good . and , since they do n't have covid-19 , you can go right ahead and check out .\n[patient_guest] okay . and both appointments in the week ?\n[doctor] correct . we'll see you all then . bye randy , feel better .\n[patient_guest] all right , great . thank you so much .\n[doctor] you are welcome , and have a good rest of your day .",
+      "reference_summary": "CHIEF COMPLAINT\n\nCough, nasal congestion, and rhinorrhea.\n\nHISTORY OF PRESENT ILLNESS\n\nRandy Gutierrez is a 9-month-old male who is being evaluated today for a cough, nasal congestion, and rhinorrhea. He is accompanied by his mother.\n\nSymptoms began yesterday around dinnertime with clear nasal drainage, pulling on his ears bilaterally, and rubbing his nose frequently. He does not have a barky cough or a sore throat. His rectal temperature was 100.3 degrees. The patient did consume a 7 ounce bottle this morning, but mostly denied the next offered bottle and declined cereal. He is irritable and having trouble falling asleep, described \u201clike he is fighting it\u201d.\n\nThe patient has been exposed to an older sister who is sick and a cousin who has a sinus infection.\n\nTreatment has included saline nasal spray, Tylenol, baby Vick's, and a humidifier. When the patient aroused this morning, he was warm to the touch. When his sleeper was removed, he was quite sweaty despite the air conditioner being on.\n\nThe patient's dandruff is also worsening. The only tried treatment is Aveeno shampoo.\n\nSOCIAL HISTORY\n\nOlder sister.\n\nCURRENT MEDICATIONS\n\nTylenol PRN.\n\nPHYSICAL EXAM\n\nTemperature 100.3 degrees.\n\nEars, Eyes, Nose, Throat\nNasal congestion, clear mucus, rhinorrhea. Bilateral pulling of ears, no sore throat or hoarseness.\n\nRespiratory\nPositive for cough.\n\nASSESSMENT\n\n\u2022 Viral infection\n\u2022 Dandruff\n\nPLAN\n\nViral infection\nThe patient presents with a viral infection and does not need antibiotics currently. I advised continuation of fluids, rest. Additionally, I suggested trying Zarbee\u2019s for children under 1 years old. If a croup cough develops, the patient will receive a 0.5 teaspoon.\n\nI also provided counseling to the mother to avoid giving honey to the patient for his first year of life due to botulism spores.\n\nDandruff\nThe patient is experiencing worsening symptoms of dandruff. I recommended Head and Shoulders shampoo, Selsun Blue, or Nizoral A-D 2 times per week, combined with his usual shampoo. I counseled the mother that she should be careful not to get the shampoo in the patient eyes and to not use the extra strength shampoos. Additionally, he may also use baby oil and a soft brush on the area.\n\nINSTRUCTIONS\n\nReturn in one week for a re-check.",
+      "prediction": "CHIEF COMPLAINT:\n\nThe chief complaint is Randy Guti\u00e9rrez, DOB 08/10/20, presents with URI.\n\nHISTORY OF PRESENT ILLNESS:\n\nRandy Guti\u00e9rrez, D.O.B. 08/10/2020, presented to clinic today complaining of having a cold. He states that he began to develop these symptoms approximately yesterday evening during dinner. The mother reports that she first noted nasal congestion followed by rhinorrhea. She denies purulent discharge. Denies ear pain. Mother notes that he has had irritability and difficulty sleeping. No history of recent travel or contact with someone ill. His vital signs were stable. Physical examination revealed bilateral conjunctival injection bilaterally. Examination of the tympanic membranes showed normal landmarks without erythema or bulging. Nasopharynx shows redness and swelling. Oral cavity shows mild erythematous tonsils. Neck supple. Respiratory system reveals decreased air entry bilaterally. Cardiovascular examination shows regular rate and rhythm. Abdominal examination negative. Neurological examination shows cranial nerves II-XII grossly intact. Skin examination shows scattered petechiae on lower extremities. Review of systems positive for respiratory and gastrointestinal complaints. Negative for genitourinary, musculoskeletal, hematologic, endocrine, psychiatric, and integumentary complaints.\n\nREVIEW OF SYSTEMS:\n\nRESPIRATORY: Positive.\nGASTROINTESTINAL: Positive.\nGENITOURINARY: Negative.\nHEMATOLOGIC: Negative.\nENDOCRINE: Negative.\nPSYCHIATRIC: Negative.\nMUSCULOSKELETAL: Negative.\nCARDIOVASCULAR: Negative.\nNEUROLOGIC: Negative.\nSKIN: Negative except for scattered petechiae on legs.\n\nPHYSICAL EXAMINATION:\n\nGENERAL: Well-developed male infant presenting in distress due to URI.\n\nHEAD: Bilateral conjunctivitis.\n\nEYES: Conjunctiva injected bilaterally.\n\nEAR: Tympanic membrane normal bilaterally.\n\nNOSE: Nasopharyngeal area congested.\n\nTHROAT: Mild erythematous tonsillar exudate.\n\nNECK: Supple.\n\nCHEST: Decreased air movement bilaterally.\n\nABDOMEN: Soft, non-distended abdomen.\n\nBACK: Straight.\n\nEXTREMITIES: Lower extremity petechia.\n\nNEUROLOGIC:\n\nCRANIAL NERVES: Grossly intact.\n\nREFLEXES: Normal.\n\nRESULTS:\n\nLABORATORY DATA: WBC count elevated at 18,000 cells/mm^3 (normal range 5,000 - 17,000). RSV PCR pending. Influenza A/B rapid test negative.\n\nASSESSMENT AND PLAN:\n\n1.  Upper Respiratory Tract Infection secondary to Rhinovirus likely given the presentation and lack of response to typical antipyretics and decongestants.\n2.  Possible allergic reaction to environmental allergens contributing to increased severity of URTI symptoms.\n3.  Differential diagnosis includes Sinusitis, Eustachian tube dysfunction, and possible otitis media.\n4.  Management plan includes supportive care including hydration, acetaminophen PRN, saline drops QID, suctioning QID, and monitoring for worsening symptoms.\n5.  Follow-up appointment scheduled for Monday, 07/29/2019, unless condition deteriorates sooner than expected.\n6.  Educated parents regarding potential complications associated with untreated URIs and importance of adherence to treatment regimen.\n7.  Encourage mothers to monitor child closely for changes in behavior, breathing patterns, and overall health status.\n8.  Discussed possibility of referral to ENT specialist depending upon progression of symptoms and failure to improve symptomatically after initial management.\n9.  Provided education on proper administration of prescribed medications and dosages.\n10.  Advised against giving Honey to infants less than 12 months old due to risk of Botulinum toxin exposure.\n11.  Recommended Zarbee's for relief of nasal congestion and recommended Tylenol suspension for fever reduction.\n12.  Suggested Head & Shoulders Shampoo for scalp irritation and advised against daily application of medicated shampoo.\n13.  Scheduled followup appointment for 01/06/2020.\n\nDISPOSITION:\n\nPatient discharged home with instructions above.",
+      "model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+      "adapter": "baseline_qlora_llama31_8b/final",
+      "system": "baseline_qlora",
+      "decoding": {
+        "max_new_tokens": 1024,
+        "do_sample": false,
+        "repetition_penalty": 1.2,
+        "no_repeat_ngram_size_generated_only": 6
+      },
+      "prompt_tokens": 2403,
+      "generated_tokens": 898,
+      "truncated": false
+    },
+    "aci_bench_test_taskC_2": {
+      "id": "aci_bench_test_taskC_2_D2N136-virtassist",
+      "dataset": "aci_bench",
+      "split": "test_taskC_2",
+      "source_dialogue": "[doctor] hi janet , how are you ?\n[patient] good , how are you ?\n[doctor] i'm good . uh , are you ready to get started ?\n[patient] yes .\n[doctor] okay . so , janet is a 33-year-old female , here for some , some joint paint . what , what joint's been bothering you , janet ?\n[patient] it's been mostly , um , my knees , actually . i've been doing more stair type workouts , which i thought was , you know , building muscle , uh , on my knees and supposed to help .\n[doctor] mm-hmm .\n[patient] but in turn it , it really has n't , so my knees have been really bothering me .\n[doctor] okay . all right . and is it one knee versus the other ? or both equally ?\n[patient] it's both equally .\n[doctor] okay . and have you been having any other joint pain like , elbows or shoulder , or anything like that ?\n[patient] no , but i , i should mention that like , i had a rotator cuff repair about two years ago .\n[doctor] mm-hmm .\n[patient] um , but i have n't had any problems since that point .\n[doctor] okay , and what shoulder was that ?\n[patient] that was my right shoulder .\n[doctor] okay , all right . and , um , any pins and needles in your feet at all ? any swelling in your legs ?\n[patient] uh , no , nothing like that .\n[doctor] okay .\n[patient] um , but it would be something though i look out for often , just because i have diabetes .\n[doctor] okay , and your blood sugars have been under control ?\n[patient] yes , they have been .\n[doctor] okay . and have you had any fever or chills ?\n[patient] no , nothing like that .\n[doctor] okay . any nausea or vomiting , chest pains , shortness of breath ?\n[patient] no , but i do have high blood pressure , um , but i , i monitor that and i've been taking medication for that , and that has n't elevated , um , in any way since the joint pain .\n[doctor] okay . all right . so , yeah , i see on here that you do take norvasc , five mg a day and you've been taking that every day-\n[patient] yes .\n[doctor] okay . um , and , um , so let's go ahead and do a quick physical exam on you . so , hey dragon , show me the blood pressure . your blood pressure's actually pretty high today , so you might be a little nervous here , which is not uncommon .\n[patient] yeah .\n[doctor] um , so , looking at you , your , your neck is nice and soft , there's no enlarged thyroid . your heart has a regular rate and rhythm . your lungs are clear . your abdomen is nice and soft , but looking at your knees , on your left knee you do have a slight erythema and edema . there is a small efusion present over your left knee . um , you have some decrease flexion and extension of your knee , but your strength in your lower extremities is good . uh , so let's go ahead and look at some of your results . i know that we did some x-rays when you came in .\n[patient] yeah .\n[doctor] hey dragon , show me the left knee x-ray . okay , so looking at this , this is an , this is a normal x-ray of your left knee , so you may just have a little bit of a strain going on in your , in your knees there .\n[patient] okay .\n[doctor] uh , let's look at some of your labs , 'cause i know that you have the diabetes . hey dragon , show me the labs . so , here your white blood cell count is not elevated , so i'm not concerned about an infection or anything like that . um , hey dragon , show me the diabetes' labs . okay and , and your a1c is a little elevated , but it's not , it's not terrible , so i think for right now we'll just continue you on the current regimen . um , so my plan from you , for you in terms of the joint pain , um , i'd like to go ahead and , you know , we'll just send some autoimmune labs to work , work up your left knee pain and , uh , we'll work for you to do some physical therapy and i'd like to go ahead and give you anti-inflammatory medication to help with the pain . does that sound okay ?\n[patient] that sounds great .\n[doctor] okay . hey dragon , order meloxicam 15 mg once a day . hey dragon , order a physical therapy referral . hey dragon , order an autoimmune profile . and then from a hypertension standpoint you , because your blood pressure is a little elevated today , i'd like you to continue to monitor it at home and , you know , send me a report in the next couple of weeks sh- , you know , giving me the , the blood pressure reportings . do you have a blood pressure cuff at home ?\n[patient] yes , i do .\n[doctor] okay . and then , um , we'll go ahead and order a lipid profile for you . hey dragon , order a lipid profile . and then for , from a diabetes standpoint let's go ahead and , uh , continue you on your metformin 500 mg twice a day . okay ?\n[patient] okay .\n[doctor] do you have any questions ?\n[patient] no , that's it .\n[doctor] okay . the nurse will be in soon . it was good to see you .\n[patient] nice seeing you too .\n[doctor] hey dragon , finalize the note .",
+      "reference_summary": "CHIEF COMPLAINT\n\nJoint pain.\n\nHISTORY OF PRESENT ILLNESS\n\nMs. Janet Sullivan is a 33-year-old female who presents to the clinic today for evaluation of joint pain.\n\nShe localizes the joint pain to her bilateral knees. The patient reports she has been doing stair workouts, which she thought was building muscle on her knees. She denies any pins and needles in her feet or swelling in her legs. The patient notes that she would look out for those symptoms because she has diabetes. She denies any fever or chills. She denies any nausea or vomiting. The patient denies any chest pain or shortness of breath.\n\nShe notes she had a right shoulder rotator cuff repair about 2 years ago, but she has not had any problems since that point.\n\nShe reports that her diabetes are well-controlled.\n\nThe patient does have high blood pressure but she monitors it and takes Norvasc 5 mg a day. She notes her blood pressure has not been elevated since her joint pain started.\n\nREVIEW OF SYSTEMS\n\n\u2022 Constitutional: Negative for fever, chills\n\u2022 Cardiovascular: Negative for chest pain or lower leg swelling.\n\u2022 Respiratory: Negative for shortness of breath.\n\u2022 Gastrointestinal: Negative for nausea, vomiting.\n\u2022 Musculoskeletal: Positive for Arthralgias\n\nPHYSICAL EXAMINATION\n\nNeck\n\u2022 General Examination: Neck is supple without thyromegaly.\n\nRespiratory\n\u2022 Auscultation of Lungs: Clear bilaterally. No wheezes, rales, or rhonchi.\n\nCardiovascular\n\u2022 Auscultation of Heart: Regular rate and rhythm.\n\nMusculoskeletal\n\u2022 Left knee: Slight erythema and edema. Small effusion present. Decreased flexion and extension. Strength in lower extremities is good.\n\nRESULTS\n\nViews: Four views left knee.\nIndication: Knee pain.\nInterpretation: There are no fractures, dislocations, or other abnormalities.\n\nPLAN\n\nMs. Janet Sullivan is a 33-year-old female who presents to the clinic today for evaluation of joint pain.\n\nLeft knee strain.\n\u2022 Medical Treatment: We will order an autoimmune panel for further workup. I am going to refer her to physical therapy and prescribe meloxicam 15 mg once daily to help with pain.\n\u2022 Specialist Referrals: Physical therapy.\n\nHypertension.\n\u2022 Medical Reasoning: Her blood pressure is elevated in office today, but has been well-controlled on Norvasc 5 mg daily based on home monitoring.\n\u2022 Medical Treatment: Continue current regimen and home monitoring. She will send me a report in the next couple of weeks. We will also order a lipid profile.\n\nDiabetes type II.\n\u2022 Medical Reasoning: Her hemoglobin a1C is slightly elevated, but her blood glucose levels have been well-controlled.\n\u2022 Medical Treatment: Continue metformin 500 mg twice a day.\n\nPatient Agreements: The patient understands and agrees with the recommended medical treatment plan.",
+      "prediction": "CHIEF COMPLAINT:\n\nThe patient is a 33 y/o F who comes in complaining of bilateral knee pain.\n\nHISTORY OF PRESENT ILLNESS:\n\nJanet is a 33 y.o.f. who presents to clinic complaining of bilateral knee pain. She states she has been working out stairs lately trying to build her leg muscles. However, she denies any improvement in her condition. The patient also complains of bilateral knee pain bilaterally without any history of trauma. No fevers, chills, night sweats, weight loss, hemoptysis, orthopnea, PND, palpitations, dyspnea, pleuritic chest pain, abdominal pain, diarrhea, constipation, arthralgias, arthritis, rash, pruritus, wheezing, hoarseness, cough, sputum production, syncope, weakness, fatigue, tremors, numbness, tingling, paresthesia, diplopia, photophobia, headache, visual changes, hearing loss, vertigo, tinnitus, dysphagia, odynophagia, epigastric burning, regurgitation, nausea, vomiting, hematemesis, melena, flank pain, frequency, urgency, nocturia, oliguria, polyuria, dysuria, urinary retention, UTI symptoms, menorrhagia, irregular menses, galactorrhea, gynecomastia, breast tenderness, nipple discharge, testicular enlargement, erectile dysfunction, impotence, decreased libido, penile curvature, Peyronie disease, prostatism, BPH, CVA/TIA, MI, HTN, DM, allergies, asthma, COPD, smoking status, alcohol use, illicit drug use, ETOH abuse, family hx of CAD, Hx of previous surgeries, medications, allergies, immunizations, last menstrual period, LMP, GYN hx, OB/GYN hx, Mammogram, Pap smear, mammography, ultrasound, cystoscopy, colonoscopy, endometrial biopsy, hysterosalpingocontrast sonohysterography (hystero-salpin-go-contrast), hysterectomy, tuboplasty, salpingostomy, oopherectomy, D&C, abortion, ectopic pregnancy, PID, fibroids, adenomyosis, ovarian cysts, uterine polyps, cervical stenosis, pelvic inflammatory disease, infertility, recurrent miscarriage, postpartum hemorrhage, placenta previa, gestational trophoblastic neoplasm, vulvar vestibulitis syndrome, Bartholin gland abscess, Bartholins duct cyst, urethritis, vaginitis, cervicitis, PID, epididymitis, orchitis, varicocele, hydroceles, hernia, inguinal mass, scrotal hematoma, spermatocele, vasalgelation, retrograde ejaculation, benign prostatic hyperplasia, chronic prostatitis, acute prostatitis, prostate cancer, kidney stones, nephrolithiasis, renal artery stenosis, renovascular hypertension, glomerulonephritis, pyelonephritis, hydronephrosis, perirenal cellulitis, renal vein thrombosis, renal infarction, diabetic retinopathy, cataracts, age-related macular degeneration, conjunctivitis, blepharoconjunctivitis, dry eye, foreign body, corneal abrasions, keratitis, uveitis, iritis, scleritis, episcleritis, orbital pseudotumor, optic neuritis, papilledema, central serous choroidopathy, branch retinal vein occlusion, branch retinal artery occlusion, vitreomacular adhesion, posterior vitreous detachment, rheumatoid nodules, systemic lupus erythematosus, Sjogren syndrome, mixed connective tissue disorder, dermatomyositis, polymyositis, psoriatic arthritis, osteoporosis, Paget disease, primary biliary cirrhosis, primary sclerosing cholangitis, autoimmune hepatitis, Crohn disease, ulcerative colitis, diverticulitis, appendicitis, pancreatitis, peptic ulcer disease, gastroenteritis, gastritis, esophageal spasm, achalasia, GERD, Barrett esophagus, eosinophilic esophagitis, Zenker dehisence, Mallory Weiss tear, choledocholithiasis, choledochocele, bile duct stricture, liver metastasis, hepatocellular carcinoma, hepatic adenomas, Budd-Chiari syndrome, portal hypertension, splenic rupture, splenic infarct, gastric volvulus, Meckels diverticulum, intussusception, rectal prolapse, anal fissure, pilonidal sinus, pilonidal cyst, pilonidal abscess, pilonidal fistula, pilonidal sinus tract, pilon",
+      "model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+      "adapter": "baseline_qlora_llama31_8b/final",
+      "system": "baseline_qlora",
+      "decoding": {
+        "max_new_tokens": 1024,
+        "do_sample": false,
+        "repetition_penalty": 1.2,
+        "no_repeat_ngram_size_generated_only": 6
+      },
+      "prompt_tokens": 1319,
+      "generated_tokens": 1024,
+      "truncated": true
+    },
+    "aci_bench_test_taskC_3": {
+      "id": "aci_bench_test_taskC_3_D2N185-virtscribe",
+      "dataset": "aci_bench",
+      "split": "test_taskC_3",
+      "source_dialogue": "[doctor] okay . next patient is ashley james , date of birth 12/27/2006 . ashley is a 14-year-old female , uh , who was previously healthy , now here for evaluation of abnormal renal ultrasound with an atrophic right kidney . hi . good afternoon , ashley . how are you doing ?\n[patient] i'm doing okay . how are you .\n[doctor] i'm doing well . thanks so much for asking . i'm dr. rogers . i'm one of your kidney doctors . and you guys must be mom and dad .\n[patient] yes , that's correct .\n[doctor] great . well ... all right . it's so nice to meet all of you . i wish it was under better circumstances , but we're gon na figure it all out , uh , here today . um , speaking of that , let's go ahead and review some of your past medical history , and then i'll complete an exam of her heart and lungs and kind of move from there . would that be all right with you , ashley ?\n[patient] yeah , that sounds good .\n[doctor] okay . so as i understand it , ashley was found to have a small ... kind of a small kidney on one side . tell me about when that was . um , i do also have records of everything , but i'd just like to hear the story of how it was found out and what you're doing that got us here , uh , today .\n[patient_guest] sure . so ashley came home one day sick out of nowhere , rubbing her stomach , and she said it was hurting on her right side . and it was so bad that she was bent over in pain .\n[doctor] okay .\n[patient] we automatically thought appendix .\n[doctor] sure . that makes a lot of sense .\n[patient_guest] we took her to her doctor . they treated her for a stomach virus . they get her fluids and sent her back home , and the next day she was twice as bad as the first day .\n[doctor] goodness . okay . then what happened ?\n[patient_guest] yeah . so i took her back again and they did more testing . i think they did an ultrasound or something , and that's where they found that one kidney was bigger .\n[doctor] okay .\n[patient_guest] um , then at that time they told us to followup with our primary the next day , which we did . um , but he was heading out on vacation , so he only saw her for a brief 10 minutes and then we were out the door . so she was still throwing up , in a lot of pain , so i took work off to help her .\n[doctor] wow . okay .\n[patient_guest] uh , we took her down to jacksonville , where they did see her and basically told us the same thing , that they did n't think one of her kidneys was working at all . they called it atrophic and that it was a lot smaller than the other one .\n[doctor] all right-y . then- then what happened ?\n[patient_guest] yeah . then , um , they found cysts or something on her kidney and ovaries and maybe some other places . her lymph nodes were swollen and they found some infection . um , they told us to followup with her doctor , which we figured since she was still sick .\n[doctor] okay . and then when you followed up with your doctor , what happened then ?\n[patient_guest] yeah . it did n't seem to be getting any better within a day or two , so we followed back up with her doctor , who was , of course , still out of town with no one to see her in his place . so we ended up coming to atlanta . we stayed here for about four days . um , they did see her and treated her .\n[doctor] okay . i am so sorry for all of that back and forth , but glad to know that there was some light at the end of that tunnel .\n[patient_guest] thank you . and then after they saw her , she did seem to get a little better . she has n't had any more throwing up or anything since , but she still complains about a lot of pain in her stomach .\n[doctor] mhm . okay .\n[patient_guest] yeah . and she mentions burning too , especially when she eats and stuff like that .\n[doctor] all right-y . okay . well , that was a really good review . so , ashley , before all of this , would you say that , all in all , you were a pretty healthy child ?\n[patient_guest] she is , yeah . before that , she was completely fine . uh , they said they think at some point she had a severe infection that might've affected her kidney .\n[doctor] got you . okay .\n[patient_guest] so one other thing , too , um , when she was four years old she was in the hospital three or four times , sometimes for three days at a time . i do n't think they did any tests to see what the infection was or even where it was coming from . um , they just gave her fluids and antibiotic and they would send us home .\n[doctor] hmm . okay .\n[patient_guest] yeah . and so a week or two later , she would have a fever and symptoms and basically the same thing . we went through that for a couple of months , and then it just stopped . so she had no problem since , but the doctor suspects that she's had kidney problems since then . so we just wan na see if she's all right or if she ... if it needs to be taken out maybe . we wan na do whatever needs to be done .\n[doctor] yes . absolutely . it sounds like this road has been very much so rough to navigate too , so we'll- we'll get you through for that . um , is ashley taking any medications daily right now ?\n[patient_guest] only pepcid .\n[doctor] okay .\n[patient_guest] yeah . so she takes 40 milligrams of pepcid a day and then also takes claritin for allergies .\n[doctor] all right-y . and any difficulties with your pregnancy with her or during delivery ?\n[patient_guest] no . um , renal disease does run in my family , though . my dad , aunt , and my cousins all have issues with their kidneys . i have their paperwork right here for you with their diagnoses .\n[doctor] great . i will definitely review that over . any other , uh , family history to be aware of ?\n[patient_guest] yes . my mom had breast cancer too .\n[doctor] okay . great . all right-y . so just a ... over a quick review . it does look like your- your father had a kidney transplant . is that correct ?\n[patient_guest] yes , that is correct . he did .\n[doctor] okay . so obstructive neuropathy . uh , it sounds like he was born with it and something , uh ... something made it so he could n't urinate correctly . does that sound right ?\n[patient_guest] yes , and they did n't catch it in time .\n[doctor] i'm so sorry to hear that .\n[patient_guest] yeah . he actually died at 47 of a massive heart attack .\n[doctor] my goodness . wow . i am so sorry to hear that , um , but thank you so much for ... you know , all of these bits and pieces really help knit up a story together for ashley so we can get her the best care .\n[patient_guest] you're welcome .\n[doctor] okay . so you said her aunt also has had kidney disease ?\n[patient_guest] yes . well , it was my dad's sister , so her great aunt .\n[doctor] okay . and ... okay . i'm looking here . it looks like ... do you know what the name of diagnosis ? it does n't seem to be mentioned .\n[patient_guest] um , this is what she sent me , \" end-stage renal disease . chronic kidney disease stage five , diabetes , hypertension . \" that's all i have , uh , to work on for her .\n[doctor] okay . uh , and that's ... okay . let me see . that is all when ... she was an adult when all of that happened ?\n[patient_guest] correct . yep .\n[doctor] all right-y . okay . and it also looks like ashley has seen a gi and a geneticist , where they did n't find anything sig ... clinically significant mutations on the panel that they did .\n[patient_guest] yes .\n[doctor] okay . so that's all good . so , ashley , um , a few questions for you if that's all right . how are you feeling right now ?\n[patient] i'm not feeling too bad . my stomach just hurts just a little bit . it's burning a little bit .\n[doctor] okay . and any pain when you go pee ?\n[patient] sometimes it's just hard to start , sometimes .\n[doctor] okay . and any blood in your pee ?\n[patient] no , not that i've noticed .\n[doctor] okay .\n[patient_guest] she does complain that it burns when she pees when she drinks certain drinks , um , like , soda . so she'll only drink gatorade or water .\n[doctor] okay . yeah . so we do see that some people are very sensitive when the drink certain items , especially the carbonation . um , it can make it burn a little bit when they urinate . um ... okay . so a lot of different pictures of her kidneys here , and we'll review all of that here in a moment . um-\n[patient_guest] okay .\n[doctor] all right-y . but before we review that , i wan na look through a quick exam , uh , and just see how things are doing . you'll hear me speak aloud the exam just to make sure i'm getting everything documented .\n[patient_guest] okay .\n[doctor] all right-y . please use my physical exam template . so , ashley , i'm gon na listen to your lungs and heart , if you'll just breathe normally for me . okay ?\n[patient] okay .\n[doctor] good . lungs and heart sound great . all right-y . so your physical exam , you know , everything we see up here is ... you know , you're a well-appearing female , alert and oriented , sitting comfortably on my chair today , i hope , uh , with not acute distress . exam , um , otherwise with norm ... within normal limits . okay . so where does that all leave us ? the good news is that her kidney functions do look good as- as does her blood pressure . we'll wan na keep on eye on both of those things , as she is at a higher risk for developing high blood pressure and something that we call proteinuria , which is where your kidneys do n't work as well as they should and we end of seeing protein in your pee .\n[patient_guest] okay .\n[doctor] or , excuse me , her pee . uh , her right kidney is a little bit smaller which is making her left kidney work harder , possibly causing the left to appear bigger , um , and it's something that we wan na keep an eye on but nothing for us to do with anything today .\n[patient_guest] okay . thank you .\n[doctor] i also recommend that , on an annual basis , we do kind of the following things . so i wan na have an ultrasound to monitor the size of her kidneys and their overall function , complete a urinalysis to continue to make sure that protein and blood are not in her ... in her pee , and do a blood pressure check . additionally , let's avoid non-steroidal anti-inflammatory medicines like ibuprofen and opt to use tylenol instead .\n[patient_guest] okay . that sounds good .\n[doctor] okay . and does ashley play any sports ?\n[patient_guest] yes . she is active in softball and she wants to join the drill team over the summer .\n[doctor] how fun . i used to play softball back in the day . um , so it'll be very important that during those activities she stays well-hydrated . i really wan na avoid dehydration , as it puts tremendous strain on her kidneys . so i'm gon na recommend at least two liters per day of water .\n[patient_guest] okay . great . we will work on that .\n[doctor] okay . i also recommended a healthy diet and continue her active lifestyle . this will help keep her and her kidneys healthier as an adult . so if we can start those behaviors early , we'll be in a good space as she progresses .\n[patient_guest] we can do that . we already do try to eat , uh , very well .\n[doctor] good . good . so for her next appointment , she can either meet with her primary care physician or an adult nephrologist closer to you guys at home . you do n't have come all the way out here .\n[patient_guest] okay . that sounds great .\n[doctor] okay . that was a lot . do we need any additional questions clarified or anything ? um , you can always give us or your primary a call if you think of anything or if ... certainly , if symptoms worse .\n[patient_guest] no . i do n't have any additional questions , and i'll- i'll definitely give you a- a phone call if we do . and thank you so much . this was so helpful .\n[doctor] awesome . well , thank you guys for making the trip . and , ashley , it was really nice to meet you . mom dad , you as well . and i hope you guys take care .\n[patient_guest] you too .\n[doctor] all right-y . past medical history , review of patient's grandfather's record , we see he had posterior urethral bowels valves and obstructive neur- neuropathy . uh , he developed chronic kidney disease and was on dial ... was dialysis-dependent . he had a renal transplant which subsequently failed , died of dialysis in his 40s . , wait . is that right ?\n[patient_guest] now that you've started , it does ... i do n't understand the he unless they were giving ... , the grandfather's record . but did you wan na do this on your own this recording ?\n[doctor] yeah . that's ... yeah . that'll work 'cause i'm gon na have to drop for this . but i think we're good for everything else .\n[patient] and he did die in his 40s . that's what it said in the note earlier .\n[doctor] okay . yeah . he died in his 40s , but i thought it was from a massive heart attack . died at 47 of a massive heart-\n[patient] he died ... it- it's saying that it meant ... it means he died on dia ... like , he was ... he was , um , utilizing dialysis .\n[doctor] not because of it . okay .\n[patient] yeah .\n[doctor] i see what you're saying .\n[patient] yeah .\n[doctor] got it . cool . i'm gon na stop-",
+      "reference_summary": "CHIEF COMPLAINT\n\nEvaluation of abnormal renal ultrasound with atrophic right kidney.\n\nHISTORY OF PRESENT ILLNESS\n\nNext patient Ashley James is a 14-year-old female, previously healthy, who is here for evaluation of abnormal renal ultrasound with atrophic right kidney.\n\nThe father details a history of the patient coming home sick one day with extreme right-sided abdominal pain. Her parents brought her for evaluation, and they treated her for a stomach virus and administered fluids prior to sending her home. The next day, the patient's pain was more severe. The patient returned to the doctor's office and an ultrasound and additional testing was performed which revealed left kidney hypertrophy. At that time, they were encouraged to follow-up with her primary care physician. The patient was seen briefly by her physician the next day, which was insignificant. Ashley was still experiencing stomach pain and vomiting, her father brought her to another facility in Jacksonville. At that location, the patient's family received information that her right kidney was nonfunctioning, atrophic, and smaller than her left kidney. Additionally, cysts on her kidneys, ovaries, and other locations were found. Her lymph nodes were swollen, and she had \"a lot of infections\". The patient was sent back to follow-up with her primary care physician. The patient was unable to follow back up with her primary care physician as he was still out of town. The patient came to Atlanta, remained here for 4 days, was evaluated and treated with subsequent improvement of her symptoms. She has not vomited since.\n\nPrior to her current medical complaints, the patient was healthy. The etiology of her kidney issues is believed to have been caused by some severe infection the patient experienced, possibly as a child.\n\nWhen the patient was 4 years old, she was hospitalized 3 or 4 times, for up to 2-3 days each time. She received fluids and antibiotics, and then discharged. Her father reports that no workup was ever performed to rule out infections during these hospitalizations. A week or 2 post-discharge the fever and symptoms would return. This kept recurring for approximately 2 months and then it spontaneously resolved.\n\nThe patient is still experiencing some stomach burning. She reports hesitancy while urinating and she states she has to wait for her urinary flow to commence. She endorses occasional dysuria. Ashley denies hematuria. Some beverages are associated with dysuria, thus the patient drinks mainly water, Gatorade and V8 juice.\n\nSOCIAL HISTORY\n\nThe patient plays on softball team and is interested in joining a drill team over the summer.\n\nFAMILY HISTORY\n\nPaternal Grandfather: Deceased approximately 47. Myocardial Infarction. Posterior Urethral Valves. Obstructive Neuropathy. End Stage Chronic Kidney Disease was Dialysis dependent. Failed Renal Transplant.\nPaternal Great Aunt: End Stage Chronic Kidney Disease is Dialysis dependent. Type II Diabetes. Hypertension.\n\nNo family history of polycystic kidney disease.\n\nCURRENT MEDICATIONS\n\nPepcid 40 mg once daily.\nClaritin as needed for allergies.\n\nPHYSICAL EXAM\n\nConstitutional\nWell-appearing female adolescent, sitting comfortably on the exam table in no acute distress.\n\nNeurological\nAlert.\n\nRESULTS\n\nAbdominal ultrasound, 03/22/2021.\nCT abdomen and pelvis, 03/22/2021.\nCMP, 03/22/2021.\n\nASSESSMENT\n\n\u2022 Renal hypoplasia.\nAshley is a 14-year-old female who presents today for evaluation of abnormal renal ultrasound with atrophic right kidney. She has right-sided renal hypoplasia with a small atrophic right kidney discovered incidentally on imaging for abdominal pain. Imaging shows compensatory hypertrophy of her left kidney. Otherwise, she shows no sequelae of chronic kidney disease and enjoys normal blood pressure. Her urinalysis is without sediment. She has normal kidney function with creatinine of 0.62, which equates to an estimated GFR of greater than 90 mL/min per 1.73 m\u00b2, and normal serum electrolytes and acid base status. Ashley is at higher risk of hypertension and proteinuria, which will need to be followed annually.\n\nPLAN\n\nYearly ultrasound to monitor the hypertrophic left kidney and atrophic right kidney. Also, on an annual basis I recommend completion of a urinalysis to assess for proteinuria and blood pressure checks. The patient should avoid use of nonsteroidal anti-inflammatory medications and use Tylenol for pain and fever. It is also recommended that she stay well hydrated, avoiding dehydration, especially while participating in sports, by consuming 2 L of water per day. I counseled the patient and family about the importance of a healthy diet and remaining active to avoid future comorbidities that may put her at increased risk for chronic kidney disease as in adult.\n\nThe patient does not need to follow up with a pediatric nephrologist but can instead follow up with her primary care physician or an adult nephrologist closer to home.\n\nINSTRUCTIONS\n\nSchedule follow up appointment with local adult nephrologist or primary care physician.",
+      "prediction": "CHIEF COMPLAINT\n\nAbnormal Renal Ultrasound with Atrophy Right Kidney.\n\nHISTORY OF PRESENT ILLNESS\n\nThe patient Ashley James is a 14-year-old female who comes in for further evaluation of abdominal pain and vomiting. She states that she has had intermittent episodes of nausea and vomiting for several weeks. The patient denies dysuria, frequency, urgency, hematuria, flank pain, or gross hematuria. No recent travel or contact with anyone ill. Denies tobacco, alcohol, illicit drug use. Family History positive for renal disease including mother, maternal grandmother, paternal uncle, and cousin.\nShe has had previous evaluations by pediatrician and gastroenterologist without findings suggestive of appendicitis or inflammatory bowel disease. Her vital signs include BP 110/70 mm Hg; HR 80 bpm; RR 16/min; Temp 98.2\u00b0F (36.8\u00b0C). Physical examination shows generalized tenderness in abdomen, negative costovertebral angle tenderness bilaterally, negative Murphy sign, and negative Cullen sign. Abdomen soft, mobile, nondistended. Lungs clear to auscultation bilaterally. HEENT examination reveals conjunctiva and sclerae are anicteric. Neck supple. Cardiovascular examination shows regular rate and rhythm, S1, S2 heard bilaterally. Abdominal sonogram revealed right kidney atrophied, left kidney larger than usual, possible hydronephrosis noted on left. Urine analysis showed specific gravity 1010, pH 5.5, WBC 15/hpf, RBC 20/hpf, Protein 30 mg/dL, Blood 25 mg/dL. \n\nREVIEW OF SYSTEMS\n\nCONSTITUTIONAL: Negative weight loss, negative fevers, chills, night sweats.\nRESPIRATORY: Negative cough, sputum production, shortness of breath.\nCARDIOVASCULAR: Negative chest pain, palpitations, orthopnea, PND.\nGASTROINTESTINAL: Positive nausea, vomiting, diarrhea, constipation, abdominal pain, bloating, flatulence.\nGENITOURINARY: Positive dysuria, frequency, nocturia, hesitancy, urinary retention, hematuria, pyuria.\nNEUROMUSCULOSKELETAL: Negative weakness, tremors, muscle spasms, joint pains, arthralgia.\nSKIN: Negative rash, pruritus, itching, hives, petechiae, purpura.\nHEMATOLOGIC: Negative pallor, icterus, jaundice, ecchymosis, bruising.\n\nPHYSICAL EXAMINATION\n\nGENERAL: Well-groomed young girl appears comfortable in bed, alert and oriented x 3, speaks clearly, appropriate affect.\n\nHEAD & NECK: Supple neck, no masses, thyroid enlargement, adenopathy, jugular venous distension.\n\nCHEST: Clear lung fields bilaterally, no wheezing, rales, rhonchi.\n\nABDOMEN: Soft, tender to deep palpation, no guarding, rebound tenderness, hepatosplenomegaly, ascites.\n\nEXTREMITIES: Bilateral extremities show symmetrical reflexes, sensation intact, motor strength 5/5.\n\nRESULTS\n\nLABORATORY DATA:\n\nESR: 24 mm/hr\nCRP: Elevated\nWBC: 18,000 cells/mm^3\nPlatelet count: Normal\nBUN/Creatinine ratio: elevated BUN, slightly decreased creatinine\nUrinary tract imaging: Left-sided hydronephrosis, right-sided atrophy.\n\nASSESSMENT AND PLAN\n\nPrimary Assessment: Acute Pyelonephritis secondary to recurrent UTI complicated by underlying structural abnormalities of the genitourinary system. Differential Diagnosis includes Chronic Pyelonephritis, Urolithiasis, Obstructive Uropathy. Plan to admit for IV antibiotics therapy, hydration management, monitoring urine output, and repeat labs as needed. Consult urology for potential surgical intervention depending on imaging results. Educate patient and parents regarding importance of adherence to treatment plan and follow-up appointments. Arrange for social worker support given complex nature of case and multiple specialists involved. Discuss possibility of referral to Nephrology due to concerns for long-term renal health. Ensure compliance with medication regimen and encourage fluid intake to prevent complications related to dehydration. Schedule follow-up appointment in clinic in 7-10 business days post-discharge. Encourage communication between healthcare providers via EpicCare messaging platform. Provide written instructions for managing condition and adhering to prescribed treatments. Offer reassurance and encouragement throughout process.",
+      "model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+      "adapter": "baseline_qlora_llama31_8b/final",
+      "system": "baseline_qlora",
+      "decoding": {
+        "max_new_tokens": 1024,
+        "do_sample": false,
+        "repetition_penalty": 1.2,
+        "no_repeat_ngram_size_generated_only": 6
+      },
+      "prompt_tokens": 3242,
+      "generated_tokens": 961,
+      "truncated": false
+    },
+    "mts_dialog_test_chat_2023": {
+      "id": "mts_dialog_test_chat_2023_47",
+      "dataset": "mts_dialog",
+      "split": "test_chat_2023",
+      "source_dialogue": "Doctor: I hear she hasn't been doing so well. \nGuest_family: My poor two-month-old baby girl has been congested for a whole week. I'm so worried about her. \nDoctor: I completely understand. It's never easy to see your baby sick. Have you taken her temperature recently? \nGuest_family: Yes, I've been using an anal thermometer. She's been running a fever for the past two days. \nDoctor: I'm glad you brought her in today. I'll go ahead and take her temperature again. Is she experiencing any other symptoms, such as difficulty breathing or wheezing at all? \nGuest_family: Not that we've noticed. \nDoctor: Is she taking down milk? \nGuest_family: Barely. Not as much as she used to the week before she started to feel bad. \nDoctor: How often have you been changing her diapers? \nGuest_family: Hm three or four times. I should've kept better track.",
+      "reference_summary": "A 2-month-old female with 1-week history of congestion and fever x2 days.",
+      "prediction": "Congestion with fever x2 d.",
+      "model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+      "adapter": "baseline_qlora_llama31_8b/final",
+      "system": "baseline_qlora",
+      "decoding": {
+        "max_new_tokens": 1024,
+        "do_sample": false,
+        "repetition_penalty": 1.2,
+        "no_repeat_ngram_size_generated_only": 6
+      },
+      "prompt_tokens": 284,
+      "generated_tokens": 8,
+      "truncated": false
+    },
+    "mts_dialog_test_sum_2023": {
+      "id": "mts_dialog_test_sum_2023_62",
+      "dataset": "mts_dialog",
+      "split": "test_sum_2023",
+      "source_dialogue": "Doctor: Do you have a history of classic migraines? \nPatient: Sadly, I do.  \nDoctor: I'm sorry to hear that. Let me go ahead and place these orders for you and we'll hopefully get you feeling better soon. \nPatient: Thank you. I appreciate it. And can you keep the lights off when you leave? \nDoctor: Of course.",
+      "reference_summary": "Intractable migraine with aura.",
+      "prediction": "Classic migraine headache.",
+      "model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+      "adapter": "baseline_qlora_llama31_8b/final",
+      "system": "baseline_qlora",
+      "decoding": {
+        "max_new_tokens": 1024,
+        "do_sample": false,
+        "repetition_penalty": 1.2,
+        "no_repeat_ngram_size_generated_only": 6
+      },
+      "prompt_tokens": 157,
+      "generated_tokens": 4,
+      "truncated": false
+    },
+    "dialogue_soap_test": {
+      "id": "dialogue_soap_test_201",
+      "dataset": "dialogue_soap",
+      "split": "test",
+      "source_dialogue": "Doctor: Hi there, I understand you've come to the emergency department with some pain in your abdomen. Can you tell me more about your symptoms?\nPatient: Yeah, for the past two days, I've had this pain in my stomach, and I haven't been feeling like eating. I've also been vomiting.\nDoctor: I see. Based on your presentation, it's important that we conduct a thorough examination. Let me examine your abdomen.\nPatient: Sure, go ahead.\nDoctor: (After examination) It seems you have pain and tenderness on the right side of your abdomen. We'll need to run some clinical, laboratory, and radiological tests to determine the cause.\nPatient: Okay, I hope it's nothing serious.\nDoctor: (After tests) We've found that you've tested positive for SARS-CoV-2 through a PCR test of your nasopharyngeal swab. In addition, based on your symptoms and our examination, we suspect that you may have appendicitis.\nPatient: Oh no, what will happen now?\nDoctor: We will start you on an empiric intravenous antimicrobial treatment with cefotaxime and metronidazole to help fight the infection. Additionally, you'll need to undergo a laparoscopic appendectomy in the operating room to remove your appendix.\nPatient: How soon will I have the surgery?\nDoctor: We will take you to the operating room as soon as possible, as this is an emergency case.\nPatient: Alright then, I hope everything goes well.\nDoctor: Rest assured, our team will take good care of you. We perform appendectomies routinely, and we'll monitor you closely during the procedure and afterwards.\nPatient: Thank you, doctor. I appreciate your help.",
+      "reference_summary": "S: The patient, a male, presents with a 2-day history of abdominal pain, decreased appetite, and vomiting. He reports the pain is localized to the stomach area.\nO: Physical examination revealed tenderness and pain on the right side of the abdomen. Laboratory tests confirmed a positive SARS-CoV-2 PCR test from a nasopharyngeal swab. No additional lab values or imaging results provided.\nA: The primary diagnosis is appendicitis, with a differential diagnosis of a gastrointestinal manifestation of COVID-19 due to the positive SARS-CoV-2 test. The presence of right-sided abdominal tenderness and systemic symptoms such as vomiting support the diagnosis of appendicitis.\nP: The patient will be started on empiric intravenous antimicrobial treatment with cefotaxime and metronidazole. A laparoscopic appendectomy is scheduled urgently to remove the inflamed appendix. Post-operative care will include monitoring for complications and managing COVID-19 symptoms as necessary. The patient will be educated about the procedures and expected post-operative course.",
+      "prediction": "S: The patient presented to the emergency department complaining of abdominal pain for the last two days, nausea, vomiting, and decreased appetite. She has not eaten much over the past couple of days due to her discomfort.\nO: Physical exam revealed right lower quadrant tenderness upon palpation. Laboratory findings were significant for COVID-19 positivity by PCR testing from a nasopharyngeal swab. No other abnormalities noted on vital signs or additional labs at this time.\nA: Primary assessment suggests acute appendicitis complicated by COVID-19 pneumonia given the recent history of feverish illness and respiratory symptoms. Differential diagnosis includes perforated viscus secondary to appendicitis versus non-perforating inflammatory process. Urgent surgical intervention indicated due to high suspicion of appendiceal rupture.\nP: Initiate IV antibiotics with cefotaxime and metronidazole pending further diagnostic evaluation including CT scan if needed. Proceed immediately to OR for urgent laparoscopic appendectomy under general anesthesia. Monitor post-operative recovery closely in ICU setting considering potential complications related to both conditions. Educate family regarding nature of procedures and expected outcomes. Ensure compliance with all medical instructions and follow-up appointments.",
+      "model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+      "adapter": "baseline_qlora_llama31_8b/final",
+      "system": "baseline_qlora",
+      "decoding": {
+        "max_new_tokens": 1024,
+        "do_sample": false,
+        "repetition_penalty": 1.2,
+        "no_repeat_ngram_size_generated_only": 6
+      },
+      "prompt_tokens": 452,
+      "generated_tokens": 235,
+      "truncated": false
+    }
+  },
+  "handoff_checklist": [
+    {
+      "item": "adapter used for generation == final/adapter_model.safetensors (sha256)",
+      "ok": true,
+      "detail": "used 14e712617f1456b6 | final/ 14e712617f1456b6"
+    },
+    {
+      "item": "predictions/baseline_qlora/: 6 files, 770 lines, 0 JSON errors",
+      "ok": true,
+      "detail": "6 files, 770 lines, 0 JSON errors"
+    },
+    {
+      "item": "truncated == true count per split (reported for Person 3 to flag/exclude)",
+      "ok": true,
+      "detail": "29 / 28 / 27 / 5 / 6 / 7"
+    },
+    {
+      "item": "training_config.json matches trainer_state.json (steps, best_step)",
+      "ok": true,
+      "detail": "config steps=332 best=200 | state global_step=332"
+    },
+    {
+      "item": "train_manifest sha256 matches kaggle/dataset/baseline_{train,val}.jsonl",
+      "ok": true,
+      "detail": "verified"
+    },
+    {
+      "item": "final/ adapter reloaded in a fresh kernel and generated on-task output (\u00a77 step 5)",
+      "ok": true,
+      "detail": "sha256 14e712617f1456b6 = checkpoint not mounted | matches train_summary: None | empty outputs 0"
+    },
+    {
+      "item": "no test id appears in baseline_train/val.jsonl",
+      "ok": true,
+      "detail": "0 overlapping ids"
+    },
+    {
+      "item": "environment.txt present",
+      "ok": true,
+      "detail": "pip freeze captured"
+    },
+    {
+      "item": "final/ adapter present",
+      "ok": true,
+      "detail": "160.1 MB"
+    }
+  ],
+  "provenance_warning": null,
+  "environment": {
+    "accelerate": "1.13.0",
+    "bitsandbytes": "0.50.2",
+    "liger_kernel": "0.8.3",
+    "peft": "0.19.1",
+    "rouge_score": "0.1.2",
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6"
+  },
+  "git_commit": "a7504b8"
+}

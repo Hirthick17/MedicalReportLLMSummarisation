@@ -2,7 +2,9 @@
 """
 Build the Review 2 baseline report (PDF) from a downloaded Kaggle run directory.
 
-Reads the tree that baseline_qlora.py writes (REVIEW2_BASELINE.md §9) and produces:
+Reads the merged tree that the two Kaggle kernels write (REVIEW2_BASELINE.md §9; training kernel:
+final/, checkpoints/, trainer_state.json, train_summary.json — inference kernel: predictions/,
+training_config.json) and produces:
   reports/<run>/report.pdf        — the document
   reports/<run>/metrics.json      — every number in the PDF, machine-readable
   reports/<run>/loss_curve.png    — train / eval loss vs step
@@ -69,7 +71,9 @@ def find_run(explicit: str | None) -> Path:
     hits = sorted(glob.glob(str(ROOT / "outputs" / "**" / "training_config.json"), recursive=True))
     if not hits:
         sys.exit("no training_config.json under outputs/ — run `kaggle kernels output ... -p outputs/kaggle` first")
-    return Path(hits[-1]).parent
+    if len(hits) > 1:   # e.g. outputs/kaggle_run2_smoke_adapter/ next to the real run — never guess
+        sys.exit("several runs under outputs/, pass --run explicitly:\n  " + "\n  ".join(hits))
+    return Path(hits[0]).parent
 
 
 def fmt(x, nd=3):
@@ -170,8 +174,26 @@ def collect(run: Path) -> dict:
                 recs, _ = load_jsonl(f)
                 all_test_ids |= {r["id"] for r in recs}
         leak = len(all_test_ids & train_val_ids)
+    # adapter provenance: the sha256 kernel B hashed at load time must be the adapter sitting in final/.
+    # Run 2 (18 Sep) generated 770 predictions with the smoke adapter because the kernel_sources mount
+    # served kernel A's last *completed* version, not the cancelled full run — nothing else caught it.
+    adapter_file = run / "final" / "adapter_model.safetensors"
+    local_adapter_sha = sha256(adapter_file) if adapter_file.exists() else None
+    used_sha = vc.get("adapter_sha256")
+    adapter_ok = (local_adapter_sha == used_sha) if (local_adapter_sha and used_sha) else None
+    provenance = None
+    if adapter_ok is False:
+        provenance = (f"ADAPTER MISMATCH: generation used adapter sha256 {used_sha[:16]}…, but final/ holds {local_adapter_sha[:16]}… "
+                      f"(trainer_state: {state.get('global_step')} steps, best checkpoint {Path(str(state.get('best_model_checkpoint', ''))).name or '—'}). "
+                      "These predictions are NOT from the adapter in this run directory — do not hand them over.")
+    elif "_smoke" in str(state.get("best_model_checkpoint", "")) and cfg.get("mode") == "full":
+        provenance = "trainer_state.json points at a *_smoke checkpoint but the config says mode=full — the training half of this run is the smoke run's."
+
     tr = cfg.get("training", {})
     checklist = [
+        ("adapter used for generation == final/adapter_model.safetensors (sha256)",
+         adapter_ok, (f"used {str(used_sha)[:16]} | final/ {str(local_adapter_sha)[:16]}" if used_sha and local_adapter_sha
+                      else "final/ not present locally — run `fetch_kaggle_run.py --stage train --no-wait`" if used_sha else "no adapter_sha256 in config")),
         ("predictions/baseline_qlora/: 6 files, 770 lines, 0 JSON errors",
          sum(not s.get("missing") for s in splits.values()) == 6 and total_lines == 770 and total_bad == 0,
          f"{sum(not s.get('missing') for s in splits.values())} files, {total_lines} lines, {total_bad} JSON errors"),
@@ -183,8 +205,11 @@ def collect(run: Path) -> dict:
          f"config steps={tr.get('steps_completed')} best={tr.get('best_step')} | state global_step={state.get('global_step')}"),
         ("train_manifest sha256 matches kaggle/dataset/baseline_{train,val}.jsonl",
          sha_ok, "verified" if sha_ok else ("MISMATCH" if sha_ok is False else "local files not present")),
-        ("final/ adapter reloads and reproduces val item #0 (§7 step 5)",
-         vc.get("adapter_reload_identical"),
+        ("final/ adapter reloaded in a fresh kernel and generated on-task output (§7 step 5)",
+         bool(vc.get("adapter_reload_fresh_process") or vc.get("adapter_reload_identical")) and vc.get("empty", 1) == 0,
+         (f"sha256 {str(vc.get('adapter_sha256', ''))[:16]} = {vc.get('adapter_matches_checkpoint') or 'checkpoint not mounted'}"
+          f" | matches train_summary: {vc.get('adapter_matches_train_summary', '—')} | empty outputs {vc.get('empty', '—')}")
+         if vc.get("adapter_reload_fresh_process") else
          f"identical {vc.get('adapter_reload_identical_n', '—')} | ROUGE-L reload vs in-session {vc.get('adapter_reload_rougeL_vs_in_session', '—')}"),
         ("no test id appears in baseline_train/val.jsonl",
          leak == 0 if leak is not None else None, f"{leak} overlapping ids" if leak is not None else "train/val jsonl not present locally"),
@@ -208,6 +233,7 @@ def collect(run: Path) -> dict:
         "validation_checks": vc, "val_by_dataset": val_by_ds, "val_gates": val_gates,
         "test_splits": splits, "samples": samples,
         "handoff_checklist": [{"item": i, "ok": ok, "detail": d} for i, ok, d in checklist],
+        "provenance_warning": provenance,
         "environment": key_pkgs,
         "git_commit": subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip(),
     }
@@ -294,10 +320,18 @@ def build_pdf(m: dict, png: Path, out: Path):
     story += [P("medsum-fact — Review 2 Baseline Report", ParagraphStyle("T", parent=ss["Title"], fontName="DejaVu-Bold", fontSize=18, spaceAfter=2)),
               P("Plain 4-bit QLoRA fine-tune of Llama-3.1-8B-Instruct for dialogue → clinical note", ParagraphStyle("ST", parent=BODY, fontSize=10.5, textColor=colors.HexColor("#555555"))),
               Spacer(1, 4),
-              P(f"Run <b>{escape(cfg['run_name'])}</b> · mode <b>{mode}</b> · Kaggle kernel <font face='DejaVuMono'>hirthick17/medsum-baseline-qlora</font> · "
+              P(f"Run <b>{escape(cfg['run_name'])}</b> · mode <b>{mode}</b> · Kaggle kernels <font face='DejaVuMono'>{escape(cfg.get('training_kernel', 'hirthick17/medsum-baseline-qlora'))}</font> (train) → "
+                f"<font face='DejaVuMono'>{escape(cfg.get('inference_kernel', 'same kernel'))}</font> (infer) · "
                 f"generated {m['generated_at']} from repo commit <font face='DejaVuMono'>{m['git_commit']}</font>", SMALL)]
     if mode != "full":
         story.append(P("<b>Note:</b> this is a SMOKE run (20 steps on 64 examples, 2 items per test split). Numbers below are pipeline checks, not results.", BODY))
+    if m.get("provenance_warning"):
+        warn = Table([[P(f"<b>NOT THE BASELINE.</b> {escape(m['provenance_warning'])}", BODY)]], colWidths=[175 * mm])
+        warn.setStyle(TableStyle([("BOX", (0, 0), (-1, -1), 1.2, colors.HexColor("#b42318")),
+                                  ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fdecea")),
+                                  ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                                  ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5)]))
+        story += [Spacer(1, 4), warn]
     story.append(Spacer(1, 8))
 
     # -- 1 summary
@@ -313,9 +347,15 @@ def build_pdf(m: dict, png: Path, out: Path):
                  f"mix: {escape(json.dumps(cfg['data']['manifest']['train']['mix']))} · leakage check: {cfg['data']['manifest']['leakage_check']['status']}"],
         ["Optimisation", f"lr {tr['lr']} · {tr['scheduler']} · warmup {tr['warmup_ratio']} · {tr['optim']} · batch 1 × accum {tr['grad_accum']} · "
                          f"{tr['epochs']} epochs · seed {tr['seed']} · liger fused-CE={tr.get('liger_fused_ce')}"],
-        ["Hardware", f"{escape(hw['gpu'])} · {hw['vram_gb_total']} GB total · device_map {escape(hw['device_map'])} · "
-                     f"peak {hw['peak_vram_gb_per_gpu']} GB / GPU · wall time <b>{hw['wall_time_h']} h</b>"],
-        ["Versions", " · ".join(f"{k} {v}" for k, v in cfg["versions"].items())],
+        ["Hardware (train)", f"{escape(hw['gpu'])} · {hw['vram_gb_total']} GB total · device_map {escape(hw['device_map'])} · "
+                             f"peak {fmt(hw.get('peak_vram_gb_per_gpu'), 2)} GB / GPU · wall time <b>{fmt(hw.get('wall_time_h'), 2)} h</b>"
+                             + (f" · train runtime {fmt(tr.get('train_runtime_h'), 2)} h at {fmt(tr.get('sec_per_step'), 1)} s/step" if tr.get("sec_per_step") else "")],
+    ]
+    hwi = cfg.get("hardware_inference")
+    if hwi:
+        kv.append(["Hardware (infer)", f"{escape(hwi['gpu'])} · peak {fmt(hwi.get('peak_vram_gb_per_gpu'), 2)} GB / GPU · wall time <b>{fmt(hwi.get('wall_time_h'), 2)} h</b>"])
+    kv += [
+        ["Versions", " · ".join(f"{k} {v}" for k, v in (cfg.get("versions") or cfg.get("versions_inference") or {}).items()) or "—"],
     ]
     story.append(tbl([["Field", "Value"]] + kv, [30 * mm, 145 * mm]))
 
@@ -345,8 +385,16 @@ def build_pdf(m: dict, png: Path, out: Path):
             ["Length ratio (pred / ref words)", fmt(vc.get("length_ratio")), "0.8 – 1.2"],
             ["Quick ROUGE-L on val subset (n=%s)" % vc.get("n"), fmt(vc.get("rougeL_f", 0) * 100, 1) if vc.get("rougeL_f") is not None else "—", "sanity gate only"],
             ["Truncated / empty on val", f"{vc.get('truncated')} / {vc.get('empty')}", "0 / 0"],
-            ["Adapter reload test", f"{'PASS' if vc.get('adapter_reload_identical') else 'MISMATCH'} · identical {vc.get('adapter_reload_identical_n', '—')} · ROUGE-L vs in-session {vc.get('adapter_reload_rougeL_vs_in_session', '—')}",
-             "byte-identical greedy output from a fresh PeftModel"]]
+            ["Adapter reload test",
+             (f"fresh kernel · adapter = {vc.get('adapter_matches_checkpoint') or 'checkpoint not mounted'} · {vc.get('empty', '—')} empty outputs"
+              if vc.get("adapter_reload_fresh_process") else
+              f"{'PASS' if vc.get('adapter_reload_identical') else 'MISMATCH'} · identical {vc.get('adapter_reload_identical_n', '—')} · ROUGE-L vs in-session {vc.get('adapter_reload_rougeL_vs_in_session', '—')}"),
+             "generation from a fresh PeftModel.from_pretrained, not the training process"]]
+    zs = vc.get("zeroshot_base_control")
+    if zs:
+        rows.append(["Zero-shot base control (§7 step 6, same %s items)" % zs.get("n"),
+                     f"ROUGE-L {fmt(zs.get('rougeL_f', 0) * 100, 1)} vs adapter {fmt(vc.get('rougeL_f', 0) * 100, 1)} · len ratio {fmt(zs.get('length_ratio'))} vs {fmt(vc.get('length_ratio'))} · truncated {zs.get('truncated')} vs {vc.get('truncated')}",
+                     "adapter should be more note-like: higher ROUGE-L, ratio nearer 1"])
     for ds, g in m["val_gates"].items():
         rows.append([f"ROUGE-L gate · {ds} val", f"{g['rougeL_f']:.1f} — {'PASS' if g['pass'] else 'BELOW GATE'}", f"≥ {g['gate']:.0f}"])
     story.append(tbl(rows, [50 * mm, 75 * mm, 50 * mm]))
@@ -355,7 +403,11 @@ def build_pdf(m: dict, png: Path, out: Path):
 
     # -- 4 test
     story.append(P("4. Test-set generation (REVIEW2_BASELINE.md §8)", H1))
-    story.append(P("Greedy decoding (num_beams=1, do_sample=False, repetition_penalty=1.1, max_new_tokens=768). ROUGE F1 × 100 with Porter stemming, "
+    dec = cfg.get("decoding", {})
+    dec_txt = (f"num_beams={dec.get('num_beams', 1)}, do_sample={dec.get('do_sample', False)}, repetition_penalty={dec.get('repetition_penalty', '—')}, "
+               f"max_new_tokens={dec.get('max_new_tokens', '—')}"
+               + (f", {dec['no_repeat_ngram_size_generated_only']}-gram repeat block on generated tokens" if dec.get("no_repeat_ngram_size_generated_only") else ""))
+    story.append(P(f"Greedy decoding ({escape(dec_txt)}). ROUGE F1 × 100 with Porter stemming, "
                    "computed here as a first look — Person 3's evaluation (BERTScore, coverage, hallucination, negation, numeric consistency) supersedes these. "
                    "DialogueSOAP is synthetic and is not a headline number.", BODY))
     rows = [["Split", "n", "R-1", "R-2", "R-L", "len ratio", "gen tok", "trunc", "empty", "status"]]
@@ -434,10 +486,11 @@ def main():
         if (run / name).exists():
             shutil.copy(run / name, out / name)
 
-    hl = [s for s in m["test_splits"].values() if s.get("headline") and not s.get("missing") and s["n"]]
     print(f"report -> {out / 'report.pdf'}")
+    if m.get("provenance_warning"):
+        print(f"  !! {m['provenance_warning']}")
     print(f"  steps {m['config']['training'].get('steps_completed')} | best eval {fmt(m['config']['training'].get('best_eval_loss'), 4)} "
-          f"| wall {m['config']['hardware']['wall_time_h']} h")
+          f"| train wall {fmt(m['config']['hardware'].get('wall_time_h'), 2)} h | infer wall {fmt(m['config'].get('hardware_inference', {}).get('wall_time_h'), 2)} h")
     for stem, s in m["test_splits"].items():
         print(f"  {stem:28s} n={s.get('n', 0):4d}  R-L={fmt(s.get('rougeL_f'), 1):>5}  ratio={fmt(s.get('length_ratio'), 2):>5}  trunc={s.get('truncated', '—')}")
     print("  handoff: " + ", ".join(("OK" if c["ok"] else ("??" if c["ok"] is None else "FAIL")) for c in m["handoff_checklist"]))

@@ -1,0 +1,6 @@
+{
+  "title": "medsum baseline adapter (17 Sep 2026 QLoRA run)",
+  "id": "hirthick17/medsum-baseline-adapter",
+  "licenses": [{"name": "other"}],
+  "description": "LoRA adapter (r=16, 4-bit NF4 QLoRA on unsloth/Meta-Llama-3.1-8B-Instruct) from the medsum-fact Review 2 baseline training run of 17 Sep 2026: 332 optimizer steps (1.24 epochs), best eval loss 0.9555 at step 200, final/ = that checkpoint. Layout: final/ (adapter + tokenizer), trainer_state.json, environment.txt. Staged and uploaded by scripts/fetch_kaggle_run.py --stage adapter; consumed by kernel hirthick17/medsum-baseline-infer, which pins the adapter's sha256. Llama 3.1 Community Licence applies to the adapter."
+}
