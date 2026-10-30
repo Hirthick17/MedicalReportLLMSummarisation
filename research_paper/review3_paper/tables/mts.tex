@@ -1,0 +1,34 @@
+\begin{table}[t]
+\centering
+\caption{Dataset 2 --- MTS-Dialog. Top: test 1 (200, MEDIQA-Chat 2023 Task A~\cite{abacha2023overview}). Bottom: both test sets (400) vs.~\cite{lyu2024}. ROUGE F1, official scoring.}\label{tab:mts}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{\begin{tabular}{@{}llrrr@{}}
+\toprule
+System & Method & R-1 & R-2 & R-L\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Test 1 (200)}}\\
+WangLab~\cite{giorgi2023wanglab} & GPT-4 ICL & \textbf{0.447} & \textbf{0.228} & \textbf{0.384}\\
+Cadence~\cite{sharma2023cadence} & BART FT & 0.430 & 0.208 & 0.364\\
+GersteinLab~\cite{abacha2023overview} & FT + ICL & 0.401 & 0.215 & 0.332\\
+Calvados~\cite{abacha2023overview} & LongT5 FT & 0.395 & 0.186 & 0.332\\
+Care4Lang~\cite{abacha2023overview} & LM FT & 0.358 & 0.165 & 0.289\\
+Organisers~\cite{abacha2023overview} & GPT-4 0-shot & 0.307 & 0.128 & 0.236\\
+Organisers~\cite{abacha2023overview} & ChatGPT 0-shot & 0.303 & 0.121 & 0.242\\\midrule
+Ours: SFT (QLoRA) & Llama-3.1-8B & 0.400 & 0.183 & 0.342\\
+Ours: SFT + Fact table & Llama-3.1-8B & 0.382 & 0.175 & 0.326\\
+Ours: A. Zero-shot & Llama-3.1-8B & 0.303 & 0.106 & 0.235\\
+Ours: B. + Fact table & Llama-3.1-8B & 0.294 & 0.117 & 0.227\\
+Ours: C. + Verifier (FaCTS) & Llama-3.1-8B & 0.287 & 0.114 & 0.225\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Test 1 + 2 (400)}}\\
+Lyu et al.~\cite{lyu2024} & GatorTronGPT-20B PT & 0.363 & 0.155 & \textbf{0.347}\\
+Lyu et al.~\cite{lyu2024} & T5-Large FT & 0.343 & 0.146 & 0.337\\\midrule
+Ours: SFT (QLoRA) & Llama-3.1-8B & \textbf{0.392} & \textbf{0.168} & 0.333\\
+Ours: SFT + Fact table & Llama-3.1-8B & 0.371 & 0.164 & 0.313\\
+Ours: A. Zero-shot & Llama-3.1-8B & 0.310 & 0.108 & 0.240\\
+Ours: B. + Fact table & Llama-3.1-8B & 0.285 & 0.106 & 0.215\\
+Ours: C. + Verifier (FaCTS) & Llama-3.1-8B & 0.275 & 0.102 & 0.213\\
+\bottomrule
+\end{tabular}}
+\end{table}

@@ -1,0 +1,656 @@
+{
+  "label": "verified",
+  "run": "..\\medsum-fact\\outputs\\kaggle_review3\\outputs\\review3",
+  "generated": "2026-10-28 15:14",
+  "bertscore": true,
+  "decoding": {
+    "max_new_tokens": 1024,
+    "do_sample": false,
+    "repetition_penalty": 1.1
+  },
+  "training": null,
+  "splits": {
+    "aci_bench_test_taskB_1": {
+      "n": 40,
+      "truncated": 0,
+      "degenerate": 0,
+      "items_with_incorrect_diagnosis": 1,
+      "items_with_incorrect_medication": 0,
+      "items_with_dosage_mismatch": 3,
+      "items_with_negation_flip": 7,
+      "items_with_numerical_error": 10,
+      "items_with_missing_diagnosis": 14,
+      "items_with_missing_medication": 17,
+      "total_incorrect_diagnoses": 1,
+      "total_incorrect_medications": 0,
+      "total_dosage_mismatches": 3,
+      "total_negation_flips": 9,
+      "total_unsupported_numbers": 15,
+      "total_unsupported_entities": 56,
+      "total_pred_entities": 560,
+      "micro_hallucination_rate": 0.1,
+      "micro_negation_flip_rate": 0.027190332326283987,
+      "micro_numerical_consistency": 0.9302325581395349,
+      "micro_clinical_coverage": 0.6453900709219859,
+      "rouge1": {
+        "mean": 0.4840589300097989,
+        "std": 0.08209796573796999,
+        "n": 40
+      },
+      "rouge2": {
+        "mean": 0.20190374759473456,
+        "std": 0.05203913937646456,
+        "n": 40
+      },
+      "rougeL": {
+        "mean": 0.2850304569095919,
+        "std": 0.05552567119650619,
+        "n": 40
+      },
+      "rougeLsum": {
+        "mean": 0.44329589039716505,
+        "std": 0.07287670836553095,
+        "n": 40
+      },
+      "bertscore_f1": {
+        "mean": 0.19580130064859985,
+        "std": 0.07463345810298387,
+        "n": 40
+      },
+      "length_ratio": {
+        "mean": 0.5816875685162154,
+        "std": 0.20807601633608416,
+        "n": 40
+      },
+      "hallucination_rate": {
+        "mean": 0.107826301410061,
+        "std": 0.08241993554493013,
+        "n": 40
+      },
+      "hallucination_rate_strict": {
+        "mean": 0.05905165250114099,
+        "std": 0.06338599378916164,
+        "n": 40
+      },
+      "negation_flip_rate": {
+        "mean": 0.0293577694235589,
+        "std": 0.0736420513882634,
+        "n": 40
+      },
+      "negation_flip_rate_vs_source": {
+        "mean": 0.13651711034063976,
+        "std": 0.12316145932650087,
+        "n": 40
+      },
+      "numerical_consistency": {
+        "mean": 0.9416549666549666,
+        "std": 0.10932634348725978,
+        "n": 37
+      },
+      "clinical_coverage": {
+        "mean": 0.6499769767556145,
+        "std": 0.14590923873312905,
+        "n": 40
+      },
+      "clinical_coverage_important": {
+        "mean": 0.6344027796291665,
+        "std": 0.17570255739110355,
+        "n": 40
+      },
+      "coverage_symptom": {
+        "mean": 0.6260781926406926,
+        "std": 0.21457094113646225,
+        "n": 40
+      },
+      "coverage_medical_history": {
+        "mean": 0.6134615384615384,
+        "std": 0.43091086270554047,
+        "n": 26
+      },
+      "coverage_diagnosis": {
+        "mean": 0.6148648648648649,
+        "std": 0.3537398601308625,
+        "n": 37
+      },
+      "coverage_medication": {
+        "mean": 0.7147619047619047,
+        "std": 0.3591164516564789,
+        "n": 35
+      },
+      "coverage_investigation": {
+        "mean": 0.7201232247284879,
+        "std": 0.24574664316040337,
+        "n": 38
+      },
+      "rougeL_excluding_degenerate": {
+        "mean": 0.2850304569095919,
+        "std": 0.05552567119650619,
+        "n": 40
+      },
+      "hallucination_rate_excluding_degenerate": {
+        "mean": 0.107826301410061,
+        "std": 0.08241993554493013,
+        "n": 40
+      }
+    },
+    "aci_bench_test_taskC_2": {
+      "n": 40,
+      "truncated": 0,
+      "degenerate": 0,
+      "items_with_incorrect_diagnosis": 0,
+      "items_with_incorrect_medication": 0,
+      "items_with_dosage_mismatch": 2,
+      "items_with_negation_flip": 12,
+      "items_with_numerical_error": 13,
+      "items_with_missing_diagnosis": 12,
+      "items_with_missing_medication": 18,
+      "total_incorrect_diagnoses": 0,
+      "total_incorrect_medications": 0,
+      "total_dosage_mismatches": 2,
+      "total_negation_flips": 20,
+      "total_unsupported_numbers": 23,
+      "total_unsupported_entities": 43,
+      "total_pred_entities": 582,
+      "micro_hallucination_rate": 0.07388316151202749,
+      "micro_negation_flip_rate": 0.05263157894736842,
+      "micro_numerical_consistency": 0.9108527131782945,
+      "micro_clinical_coverage": 0.6693017127799736,
+      "rouge1": {
+        "mean": 0.48169150250306075,
+        "std": 0.06968505351817107,
+        "n": 40
+      },
+      "rouge2": {
+        "mean": 0.20612898794753082,
+        "std": 0.05549495427788716,
+        "n": 40
+      },
+      "rougeL": {
+        "mean": 0.2794798927460221,
+        "std": 0.06420075757975084,
+        "n": 40
+      },
+      "rougeLsum": {
+        "mean": 0.44171537863676164,
+        "std": 0.06432870691074553,
+        "n": 40
+      },
+      "bertscore_f1": {
+        "mean": 0.17890140637755395,
+        "std": 0.06332618306326628,
+        "n": 40
+      },
+      "length_ratio": {
+        "mean": 0.5514801281588179,
+        "std": 0.17014360951942017,
+        "n": 40
+      },
+      "hallucination_rate": {
+        "mean": 0.07107323980485744,
+        "std": 0.06374123330552946,
+        "n": 40
+      },
+      "hallucination_rate_strict": {
+        "mean": 0.025395546379002258,
+        "std": 0.04230150352371783,
+        "n": 40
+      },
+      "negation_flip_rate": {
+        "mean": 0.03966826910905858,
+        "std": 0.07389433989604195,
+        "n": 40
+      },
+      "negation_flip_rate_vs_source": {
+        "mean": 0.0877256215371204,
+        "std": 0.11557981754526594,
+        "n": 40
+      },
+      "numerical_consistency": {
+        "mean": 0.9185438172938174,
+        "std": 0.14237141774878823,
+        "n": 40
+      },
+      "clinical_coverage": {
+        "mean": 0.6811286199161305,
+        "std": 0.14528607460029025,
+        "n": 40
+      },
+      "clinical_coverage_important": {
+        "mean": 0.6875382219722179,
+        "std": 0.1611518829860796,
+        "n": 40
+      },
+      "coverage_symptom": {
+        "mean": 0.622812049062049,
+        "std": 0.27278655443107813,
+        "n": 40
+      },
+      "coverage_medical_history": {
+        "mean": 0.8566666666666667,
+        "std": 0.32619012860600183,
+        "n": 25
+      },
+      "coverage_diagnosis": {
+        "mean": 0.7481981981981982,
+        "std": 0.2877317262712957,
+        "n": 37
+      },
+      "coverage_medication": {
+        "mean": 0.7293981481481482,
+        "std": 0.3322928559197987,
+        "n": 36
+      },
+      "coverage_investigation": {
+        "mean": 0.7030059523809523,
+        "std": 0.2454770835482115,
+        "n": 40
+      },
+      "rougeL_excluding_degenerate": {
+        "mean": 0.2794798927460221,
+        "std": 0.06420075757975084,
+        "n": 40
+      },
+      "hallucination_rate_excluding_degenerate": {
+        "mean": 0.07107323980485744,
+        "std": 0.06374123330552946,
+        "n": 40
+      }
+    },
+    "aci_bench_test_taskC_3": {
+      "n": 40,
+      "truncated": 0,
+      "degenerate": 0,
+      "items_with_incorrect_diagnosis": 3,
+      "items_with_incorrect_medication": 0,
+      "items_with_dosage_mismatch": 0,
+      "items_with_negation_flip": 13,
+      "items_with_numerical_error": 10,
+      "items_with_missing_diagnosis": 17,
+      "items_with_missing_medication": 22,
+      "total_incorrect_diagnoses": 3,
+      "total_incorrect_medications": 0,
+      "total_dosage_mismatches": 0,
+      "total_negation_flips": 20,
+      "total_unsupported_numbers": 16,
+      "total_unsupported_entities": 46,
+      "total_pred_entities": 618,
+      "micro_hallucination_rate": 0.0744336569579288,
+      "micro_negation_flip_rate": 0.05128205128205128,
+      "micro_numerical_consistency": 0.9259259259259259,
+      "micro_clinical_coverage": 0.6217798594847775,
+      "rouge1": {
+        "mean": 0.46608812918797576,
+        "std": 0.0697307990445431,
+        "n": 40
+      },
+      "rouge2": {
+        "mean": 0.1976533422095993,
+        "std": 0.05517132782086676,
+        "n": 40
+      },
+      "rougeL": {
+        "mean": 0.27056383981326243,
+        "std": 0.05441487321372981,
+        "n": 40
+      },
+      "rougeLsum": {
+        "mean": 0.4332332470925489,
+        "std": 0.06988701339797132,
+        "n": 40
+      },
+      "bertscore_f1": {
+        "mean": 0.16952357981354,
+        "std": 0.06740406261987862,
+        "n": 40
+      },
+      "length_ratio": {
+        "mean": 0.523785875015645,
+        "std": 0.1695775674562351,
+        "n": 40
+      },
+      "hallucination_rate": {
+        "mean": 0.08331208476466923,
+        "std": 0.06559050833971238,
+        "n": 40
+      },
+      "hallucination_rate_strict": {
+        "mean": 0.03785036450477627,
+        "std": 0.0498459495740264,
+        "n": 40
+      },
+      "negation_flip_rate": {
+        "mean": 0.04609307713700129,
+        "std": 0.0751551368806937,
+        "n": 40
+      },
+      "negation_flip_rate_vs_source": {
+        "mean": 0.14907296869796868,
+        "std": 0.1557437979068094,
+        "n": 40
+      },
+      "numerical_consistency": {
+        "mean": 0.947929847929848,
+        "std": 0.10239607643551925,
+        "n": 39
+      },
+      "clinical_coverage": {
+        "mean": 0.6358830684893092,
+        "std": 0.13658688919985745,
+        "n": 40
+      },
+      "clinical_coverage_important": {
+        "mean": 0.6322025007844516,
+        "std": 0.18321307176341575,
+        "n": 40
+      },
+      "coverage_symptom": {
+        "mean": 0.6280176871846763,
+        "std": 0.23812056661545422,
+        "n": 40
+      },
+      "coverage_medical_history": {
+        "mean": 0.7532051282051282,
+        "std": 0.36432877137129205,
+        "n": 26
+      },
+      "coverage_diagnosis": {
+        "mean": 0.6895918367346939,
+        "std": 0.27776357407343594,
+        "n": 35
+      },
+      "coverage_medication": {
+        "mean": 0.6468468468468469,
+        "std": 0.34536479903426687,
+        "n": 37
+      },
+      "coverage_investigation": {
+        "mean": 0.6798738298738299,
+        "std": 0.17816856262230416,
+        "n": 39
+      },
+      "rougeL_excluding_degenerate": {
+        "mean": 0.27056383981326243,
+        "std": 0.05441487321372981,
+        "n": 40
+      },
+      "hallucination_rate_excluding_degenerate": {
+        "mean": 0.08331208476466923,
+        "std": 0.06559050833971238,
+        "n": 40
+      }
+    },
+    "mts_dialog_test_chat_2023": {
+      "n": 200,
+      "truncated": 0,
+      "degenerate": 0,
+      "items_with_incorrect_diagnosis": 2,
+      "items_with_incorrect_medication": 0,
+      "items_with_dosage_mismatch": 0,
+      "items_with_negation_flip": 16,
+      "items_with_numerical_error": 13,
+      "items_with_missing_diagnosis": 4,
+      "items_with_missing_medication": 13,
+      "total_incorrect_diagnoses": 2,
+      "total_incorrect_medications": 0,
+      "total_dosage_mismatches": 0,
+      "total_negation_flips": 23,
+      "total_unsupported_numbers": 29,
+      "total_unsupported_entities": 43,
+      "total_pred_entities": 459,
+      "micro_hallucination_rate": 0.09368191721132897,
+      "micro_negation_flip_rate": 0.07718120805369127,
+      "micro_numerical_consistency": 0.8027210884353742,
+      "micro_clinical_coverage": 0.6401590457256461,
+      "rouge1": {
+        "mean": 0.30342149060847434,
+        "std": 0.17782924031455505,
+        "n": 200
+      },
+      "rouge2": {
+        "mean": 0.11794406682815778,
+        "std": 0.11979761510220119,
+        "n": 200
+      },
+      "rougeL": {
+        "mean": 0.23582537472013373,
+        "std": 0.15331668577011248,
+        "n": 200
+      },
+      "rougeLsum": {
+        "mean": 0.24845033486401447,
+        "std": 0.15527968338645187,
+        "n": 200
+      },
+      "bertscore_f1": {
+        "mean": 0.21688884219911414,
+        "std": 0.14139855376445315,
+        "n": 200
+      },
+      "length_ratio": {
+        "mean": 3.8480574223040325,
+        "std": 7.204614918698354,
+        "n": 200
+      },
+      "hallucination_rate": {
+        "mean": 0.10595852138405329,
+        "std": 0.24664345361825016,
+        "n": 141
+      },
+      "hallucination_rate_strict": {
+        "mean": 0.0754280392578265,
+        "std": 0.22004765594611744,
+        "n": 141
+      },
+      "negation_flip_rate": {
+        "mean": 0.07411081716637272,
+        "std": 0.21565208541550152,
+        "n": 108
+      },
+      "negation_flip_rate_vs_source": {
+        "mean": 0.20416197975253092,
+        "std": 0.33777352482478656,
+        "n": 127
+      },
+      "numerical_consistency": {
+        "mean": 0.875,
+        "std": 0.29613691440290263,
+        "n": 74
+      },
+      "clinical_coverage": {
+        "mean": 0.7068264783552061,
+        "std": 0.3391498781298665,
+        "n": 129
+      },
+      "clinical_coverage_important": {
+        "mean": 0.7041637695637695,
+        "std": 0.35261990441215263,
+        "n": 125
+      },
+      "coverage_symptom": {
+        "mean": 0.7371842278092279,
+        "std": 0.34190497709206447,
+        "n": 72
+      },
+      "coverage_medical_history": {
+        "mean": 0.6193181818181818,
+        "std": 0.4600167868837789,
+        "n": 44
+      },
+      "coverage_diagnosis": {
+        "mean": 0.5961538461538461,
+        "std": 0.4547777632406828,
+        "n": 52
+      },
+      "coverage_medication": {
+        "mean": 0.7330729166666666,
+        "std": 0.39963353642200716,
+        "n": 32
+      },
+      "coverage_investigation": {
+        "mean": 0.5471264367816092,
+        "std": 0.46621630496752436,
+        "n": 29
+      },
+      "rougeL_excluding_degenerate": {
+        "mean": 0.23582537472013373,
+        "std": 0.15331668577011248,
+        "n": 200
+      },
+      "hallucination_rate_excluding_degenerate": {
+        "mean": 0.10595852138405329,
+        "std": 0.24664345361825016,
+        "n": 141
+      }
+    },
+    "mts_dialog_test_sum_2023": {
+      "n": 200,
+      "truncated": 0,
+      "degenerate": 0,
+      "items_with_incorrect_diagnosis": 3,
+      "items_with_incorrect_medication": 2,
+      "items_with_dosage_mismatch": 0,
+      "items_with_negation_flip": 6,
+      "items_with_numerical_error": 19,
+      "items_with_missing_diagnosis": 6,
+      "items_with_missing_medication": 13,
+      "total_incorrect_diagnoses": 3,
+      "total_incorrect_medications": 2,
+      "total_dosage_mismatches": 0,
+      "total_negation_flips": 9,
+      "total_unsupported_numbers": 34,
+      "total_unsupported_entities": 52,
+      "total_pred_entities": 344,
+      "micro_hallucination_rate": 0.1511627906976744,
+      "micro_negation_flip_rate": 0.04265402843601896,
+      "micro_numerical_consistency": 0.7926829268292683,
+      "micro_clinical_coverage": 0.4793028322440087,
+      "rouge1": {
+        "mean": 0.2784780528646036,
+        "std": 0.15447633432629704,
+        "n": 200
+      },
+      "rouge2": {
+        "mean": 0.09340778753579804,
+        "std": 0.09409526076709121,
+        "n": 200
+      },
+      "rougeL": {
+        "mean": 0.20999376044202506,
+        "std": 0.12032611651970904,
+        "n": 200
+      },
+      "rougeLsum": {
+        "mean": 0.2254987353485195,
+        "std": 0.12354054943830348,
+        "n": 200
+      },
+      "bertscore_f1": {
+        "mean": 0.207847298104316,
+        "std": 0.12513999928307967,
+        "n": 200
+      },
+      "length_ratio": {
+        "mean": 3.498845224527043,
+        "std": 4.632622952656846,
+        "n": 200
+      },
+      "hallucination_rate": {
+        "mean": 0.18066124413780663,
+        "std": 0.3242258829751888,
+        "n": 128
+      },
+      "hallucination_rate_strict": {
+        "mean": 0.13311660128066377,
+        "std": 0.28717298672261793,
+        "n": 128
+      },
+      "negation_flip_rate": {
+        "mean": 0.04674329501915708,
+        "std": 0.19320908744581877,
+        "n": 87
+      },
+      "negation_flip_rate_vs_source": {
+        "mean": 0.14817605941459153,
+        "std": 0.31824861679605093,
+        "n": 109
+      },
+      "numerical_consistency": {
+        "mean": 0.8290598290598291,
+        "std": 0.3362313752924092,
+        "n": 78
+      },
+      "clinical_coverage": {
+        "mean": 0.5065608044796804,
+        "std": 0.3996771944216546,
+        "n": 123
+      },
+      "clinical_coverage_important": {
+        "mean": 0.5277538171445735,
+        "std": 0.40097400780845754,
+        "n": 119
+      },
+      "coverage_symptom": {
+        "mean": 0.547283798576902,
+        "std": 0.400507952561234,
+        "n": 58
+      },
+      "coverage_medical_history": {
+        "mean": 0.521985815602837,
+        "std": 0.45541276296210587,
+        "n": 47
+      },
+      "coverage_diagnosis": {
+        "mean": 0.41551724137931034,
+        "std": 0.4457962662533378,
+        "n": 58
+      },
+      "coverage_medication": {
+        "mean": 0.6203703703703703,
+        "std": 0.44434798335932696,
+        "n": 24
+      },
+      "coverage_investigation": {
+        "mean": 0.20555555555555557,
+        "std": 0.37437190197403214,
+        "n": 30
+      },
+      "rougeL_excluding_degenerate": {
+        "mean": 0.20999376044202506,
+        "std": 0.12032611651970904,
+        "n": 200
+      },
+      "hallucination_rate_excluding_degenerate": {
+        "mean": 0.18066124413780663,
+        "std": 0.3242258829751888,
+        "n": 128
+      }
+    }
+  },
+  "headline": {
+    "rougeL": {
+      "mean": 0.23570537425228236,
+      "std": 0.12678191766776536,
+      "n": 520
+    },
+    "hallucination_rate": {
+      "mean": 0.12481556761947114,
+      "std": 0.24465893321474141,
+      "n": 389
+    },
+    "negation_flip_rate": {
+      "mean": 0.05293777634101483,
+      "std": 0.16916698122787846,
+      "n": 315
+    },
+    "numerical_consistency": {
+      "mean": 0.8879437208728254,
+      "std": 0.25580509368403015,
+      "n": 268
+    },
+    "clinical_coverage": {
+      "mean": 0.6241052184550119,
+      "std": 0.3265693071986733,
+      "n": 372
+    }
+  }
+}

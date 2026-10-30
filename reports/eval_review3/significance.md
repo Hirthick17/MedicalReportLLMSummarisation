@@ -1,0 +1,10 @@
+# Paired bootstrap (10,000 resamples), difference in percentage points, 95% CI
+
+- **aci_bench SFT - A**: hallucination_rate +37.3 [+32.1, +42.5] (n=120) *; negation_flip_rate +9.0 [+6.0, +12.0] (n=120) *; numerical_consistency -26.2 [-32.8, -19.7] (n=119) *; clinical_coverage -29.6 [-34.1, -25.0] (n=120) *; rougeL -14.0 [-15.7, -12.3] (n=120) *
+- **aci_bench SFT+F - SFT**: hallucination_rate -0.6 [-7.4, +6.4] (n=120); negation_flip_rate +4.0 [+0.4, +7.8] (n=120) *; numerical_consistency +5.5 [-1.1, +12.1] (n=119); clinical_coverage +3.5 [-1.1, +8.1] (n=120); rougeL -3.1 [-4.9, -1.3] (n=120) *
+- **aci_bench B - A**: hallucination_rate -3.9 [-5.2, -2.6] (n=120) *; negation_flip_rate -0.0 [-1.6, +1.6] (n=120); numerical_consistency +9.4 [+6.4, +12.4] (n=119) *; clinical_coverage +0.4 [-1.4, +2.3] (n=120); rougeL -0.7 [-1.3, -0.2] (n=120) *
+- **aci_bench C - B**: hallucination_rate -1.8 [-3.0, -0.8] (n=120) *; negation_flip_rate -0.8 [-2.2, +0.5] (n=120); numerical_consistency +0.8 [-0.1, +1.8] (n=116); clinical_coverage -11.6 [-13.8, -9.5] (n=120) *; rougeL -1.8 [-2.3, -1.4] (n=120) *
+- **mts_dialog SFT - A**: hallucination_rate +14.3 [+10.4, +18.3] (n=223) *; negation_flip_rate +1.2 [-1.4, +3.7] (n=183); numerical_consistency -5.4 [-10.0, -0.8] (n=119) *; clinical_coverage +0.1 [-5.3, +5.6] (n=252); rougeL +9.5 [+6.8, +12.2] (n=400) *
+- **mts_dialog SFT+F - SFT**: hallucination_rate -4.3 [-7.4, -1.2] (n=248) *; negation_flip_rate +3.0 [+1.0, +5.2] (n=198) *; numerical_consistency -1.6 [-5.2, +1.7] (n=126); clinical_coverage +1.7 [-2.2, +5.5] (n=252); rougeL -2.1 [-3.9, -0.4] (n=400) *
+- **mts_dialog B - A**: hallucination_rate -3.5 [-5.9, -1.1] (n=250) *; negation_flip_rate +1.2 [-1.1, +3.5] (n=197); numerical_consistency -0.7 [-4.2, +2.8] (n=148); clinical_coverage +3.6 [-0.9, +8.1] (n=252); rougeL -2.7 [-3.8, -1.7] (n=400) *
+- **mts_dialog C - B**: hallucination_rate -0.7 [-1.9, +0.5] (n=269); negation_flip_rate +0.3 [-0.9, +1.8] (n=195); numerical_consistency +2.3 [+0.4, +4.3] (n=152) *; clinical_coverage -10.6 [-13.3, -8.1] (n=252) *; rougeL -0.1 [-0.6, +0.4] (n=400)

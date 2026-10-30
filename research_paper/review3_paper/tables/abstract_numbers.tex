@@ -1,0 +1,8 @@
+% Numbers from reports/eval_review3/summary.md and research_paper/published_results.md.
+On ACI-Bench test~1 the untrained model reaches ROUGE-1 0.519, equal to GPT-4 zero-shot (0.518) in the
+MEDIQA-Chat 2023 shared task, against 0.614 for the best GPT-4 in-context system; on MTS-Dialog the
+fine-tuned model reaches 0.400, level with fine-tuned shared-task systems (0.395--0.401). However, QLoRA
+fine-tuning raised the entity-level hallucination rate from 14.4\% to 51.7\% (ACI-Bench) and from 20.4\% to
+35.6\% (MTS-Dialog); giving the fine-tuned model the fact table did not undo this. The fact table lowered hallucination to 10.6\% and 15.8\% without loss of coverage, giving
+the best fact-level F1 (82.8 and 77.4); verification lowered it further to 8.7\% and 14.2\% at a cost in
+coverage.

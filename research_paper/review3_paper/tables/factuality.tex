@@ -1,0 +1,24 @@
+\begin{table*}[t]
+\centering
+\caption{Clinical factuality on all test items of each dataset (per-item means, \%). R-L uses stemming; BERTScore = roberta-large, rescaled. Halluc.\ and Neg.\ flip: lower is better. $P_f=1-$Halluc., $R_f=$ Coverage.}\label{tab:fact}
+\footnotesize
+\resizebox{\textwidth}{!}{\begin{tabular}{@{}lrrrrrrrrr@{}}
+\toprule
+System & R-L & BERTScore & Halluc.$\downarrow$ & Neg.\ flip$\downarrow$ & Num.\ cons. & Coverage & $P_f$ & $R_f$ & $F1_f$\\
+\midrule
+\multicolumn{10}{@{}l}{\emph{ACI-Bench (120)}}\\
+SFT (QLoRA) & 16.4 & -0.022 & 51.7 & 13.7 & 57.6 & 47.2 & 48.3 & 47.2 & 47.7\\
+SFT + Fact table & 13.3 & -0.102 & 51.2 & 17.7 & 62.6 & 50.7 & 48.8 & 50.7 & 49.7\\
+A. Zero-shot & 30.4 & 0.224 & 14.4 & 4.7 & 83.7 & 76.8 & 85.6 & 76.8 & 80.9\\
+B. + Fact table & 29.7 & 0.219 & 10.6 & 4.7 & 93.0 & 77.2 & 89.4 & 77.2 & 82.8\\
+C. + Verifier (FaCTS) & 27.8 & 0.181 & 8.7 & 3.8 & 93.6 & 65.6 & 91.3 & 65.6 & 76.3\\
+\midrule
+\multicolumn{10}{@{}l}{\emph{MTS-Dialog (400)}}\\
+SFT (QLoRA) & 34.6 & 0.428 & 35.6 & 5.1 & 82.9 & 68.1 & 64.4 & 68.1 & 66.2\\
+SFT + Fact table & 32.4 & 0.411 & 28.3 & 8.4 & 80.7 & 69.8 & 71.7 & 69.8 & 70.8\\
+A. Zero-shot & 25.1 & 0.223 & 20.4 & 4.9 & 88.3 & 68.0 & 79.6 & 68.0 & 73.3\\
+B. + Fact table & 22.4 & 0.224 & 15.8 & 5.4 & 84.4 & 71.5 & 84.2 & 71.5 & 77.4\\
+C. + Verifier (FaCTS) & 22.3 & 0.212 & 14.2 & 6.2 & 85.1 & 60.9 & 85.8 & 60.9 & 71.3\\
+\bottomrule
+\end{tabular}}
+\end{table*}

@@ -17,6 +17,33 @@ Review 2 delivered, the key numbers and where everything is. Then, per role:
   checker (`src/eval/`), results tables, figures, example errors, preliminary conclusions.
 - **[MODEL_PLAN.md](MODEL_PLAN.md)** — the full FaCTS design (Review 3 target).
 
+### Review 3 (this version)
+
+The Review 3 paper is **[research_paper/review3_paper/main.pdf](research_paper/review3_paper/main.pdf)**
+(LaTeX sources and tables in the same folder; how each number is produced: its `README.md`).
+This version of the code covers SFT training and testing on ACI-Bench and MTS-Dialog:
+
+| system | what it is | code |
+|---|---|---|
+| SFT | Review 2 QLoRA adapter, Review 2 prompt, 1,024 new tokens | `kaggle/review3_sft/` |
+| SFT + fact table | same adapter, fact-conditioned prompt | `kaggle/review3_sft/` |
+| A. Zero-shot | base Llama-3.1-8B-Instruct, Review 2 prompt | `kaggle/review3/` |
+| B. + Fact table | base model, fact-conditioned prompt (`src/pipeline/`) | `kaggle/review3/` |
+
+Test sets: ACI-Bench test 1–3 (120 encounters) and MTS-Dialog test 1–2 (400). Results:
+`reports/eval_review3/` (`summary.md`, `significance.md`, one folder per system). The sentence verifier
+of system C is not part of this code release; its results are reported in the paper.
+
+```bash
+python scripts/build_review3_prompts.py            # -> kaggle/review3_data/ (prompts dataset, not committed)
+kaggle kernels push -p kaggle/review3              # systems A and B
+kaggle kernels push -p kaggle/review3_sft          # SFT and SFT + fact table
+python scripts/official_rouge.py <predictions dir> # MEDIQA-Chat ROUGE
+python -m src.eval.run_eval --run <run> --system <system> --label <label> --out reports/eval_review3 --bertscore
+python scripts/paired_bootstrap.py                 # -> reports/eval_review3/significance.md
+python scripts/make_paper_tables.py                # -> research_paper/review3_paper/tables/
+```
+
 ---
 
 ## Quick start
@@ -160,19 +187,24 @@ medsum-fact/
 │   └── fetch_kaggle_run.py     # drive kernel A -> adapter dataset -> kernel B, verify sha, download, report
 ├── src/
 │   ├── cfe/                    # rule-based Clinical Fact Extractor: lexicon (lex_*.py), negation.py, extractor.py
+│   ├── pipeline/               # Review 3: fact table + fact-conditioned prompt (fact_table.py, prompt.py)
 │   └── eval/                   # metrics.py (ROUGE/BERTScore/degeneration), factuality.py, run_eval.py
-├── tests/                      # pytest: test_cfe.py, test_factuality.py
+├── tests/                      # pytest: test_cfe.py, test_factuality.py, test_fact_table.py
 ├── kaggle/
 │   ├── dataset/                # what gets uploaded as the private Kaggle dataset
 │   ├── baseline/               # kernel A: baseline_qlora.py — TRAINS, saves final/ + train_summary.json
 │   ├── adapter/                # metadata of the private adapter dataset
-│   └── infer/                  # kernel B: baseline_infer.py — loads the pinned adapter, GENERATES, writes training_config.json
+│   ├── infer/                  # kernel B: baseline_infer.py — loads the pinned adapter, GENERATES, writes training_config.json
+│   ├── review3/                # Review 3: systems A (zero-shot) and B (fact table) on the test sets
+│   ├── review3_sft/            # Review 3: SFT and SFT + fact table on the same test sets
+│   └── review3_data/           # metadata of the prompts dataset (the prompts themselves are not committed)
+├── research_paper/review3_paper/ # Review 3 paper: main.pdf, LaTeX sources, tables, figure
 ├── data/
 │   ├── raw/<dataset_key>/      # downloader writes here (git-ignored)
 │   ├── processed/              # unified jsonl, baseline_train/val.jsonl, train_manifest.json, facts/ (git-ignored)
 │   ├── interim/                # cfe_stats.json
 │   └── MANIFEST.json
-├── reports/                    # committed: data_audit/, eval_baseline/<label>/, baseline_qlora_llama31_8b/report.pdf
+├── reports/                    # committed: data_audit/, eval_baseline/<label>/, baseline_qlora_llama31_8b/report.pdf, eval_review3/
 └── outputs/                    # git-ignored: adapters, checkpoints, predictions
     ├── kaggle/outputs/baseline_qlora_llama31_8b/     # run 3 (kernel A + kernel B merged; layout in REVIEW2_BASELINE.md §9)
     ├── kaggle_run1_old_decoding/                    # run 1 predictions (old decoding, same adapter)

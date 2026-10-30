@@ -1,0 +1,20 @@
+We evaluated an open 8B LLM for clinical note generation on the official ACI-Bench and MTS-Dialog test sets
+and compared it with published MEDIQA-Chat 2023 systems using the official ROUGE configuration. Untrained
+Llama-3.1-8B-Instruct matched GPT-4 zero-shot on both datasets (ROUGE-1 0.519 and 0.303). QLoRA fine-tuning
+raised ROUGE on the short MTS-Dialog sections to the level of fine-tuned shared-task systems (0.400), but
+increased the entity-level hallucination rate on both datasets (ACI-Bench 14.4\%$\rightarrow$51.7\%,
+MTS-Dialog 20.4\%$\rightarrow$35.6\%); adding the fact table to the fine-tuned model did not bring it back
+to the level of the untrained model. FaCTS addresses this without training: conditioning the model on a
+negation- and dose-aware fact table lowered hallucination to 10.6\% and 15.8\% with no loss of coverage, giving
+the best fact-level F1 on both datasets, and sentence-level NLI verification lowered it further to 8.7\% and
+14.2\% at a cost of about 11 points of coverage.
+
+Future work follows directly from these results. (1) \emph{Repair instead of drop}: rewrite red sentences
+with the generator, as in detector-guided self-refinement~\cite{seethakantha2026hdsr}, to keep their
+supported facts. (2) \emph{Factuality preference training}: train an ORPO~\cite{hong2024orpo} adapter on pairs
+of reference notes and copies with one injected error (negation flip, dose change, entity swap, inserted
+fact), so that the model, not only the pipeline, learns to prefer grounded notes. (3) A better verifier for
+dialogue negation, e.g.\ fine-tuning the NLI model on clinical question--answer pairs. (4) Clinician
+evaluation of a sample of notes, and the shared-task BERTScore and BLEURT for a complete comparison.
+(5) Rebalancing the fine-tuning data towards full notes and selecting checkpoints by factuality rather than
+validation loss.

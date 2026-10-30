@@ -65,12 +65,13 @@ def fmt(x, nd=1, scale=100):
     return "—" if x is None else f"{x * scale:.{nd}f}"
 
 
-def evaluate_run(run: Path, label: str, use_bertscore: bool, limit: int | None, bertscore_cache: Path | None = None) -> dict:
+def evaluate_run(run: Path, label: str, use_bertscore: bool, limit: int | None, bertscore_cache: Path | None = None,
+                 system: str = "baseline_qlora") -> dict:
     pred_dir = run / "predictions"
-    files = {Path(p).stem: Path(p) for p in glob.glob(str(pred_dir / "baseline_qlora" / "*.jsonl"))}
-    if (pred_dir / "val_check.jsonl").exists():
+    files = {Path(p).stem: Path(p) for p in glob.glob(str(pred_dir / system / "*.jsonl"))}
+    if system == "baseline_qlora" and (pred_dir / "val_check.jsonl").exists():
         files["val_check"] = pred_dir / "val_check.jsonl"
-    if (pred_dir / "zeroshot_base" / "val_check.jsonl").exists():
+    if system == "baseline_qlora" and (pred_dir / "zeroshot_base" / "val_check.jsonl").exists():
         files["zeroshot_base/val_check"] = pred_dir / "zeroshot_base" / "val_check.jsonl"
     if not files:
         sys.exit(f"no prediction files under {pred_dir}")
@@ -354,9 +355,15 @@ def main() -> int:
     ap.add_argument("--bertscore-cache", default=None, help="per_item.jsonl of an earlier evaluation of the same predictions; its BERTScore values are reused")
     ap.add_argument("--limit", type=int, default=None, help="evaluate only the first N items per split (smoke test)")
     ap.add_argument("--compare", action="store_true")
+    ap.add_argument("--system", default="baseline_qlora", help="predictions/<system>/ folder to evaluate")
+    ap.add_argument("--out", default=None, help="report root (default reports/eval_baseline)")
     a = ap.parse_args()
+    if a.out:
+        global OUT
+        OUT = Path(a.out)
     if a.run:
-        evaluate_run(Path(a.run), a.label or Path(a.run).name, a.bertscore, a.limit, Path(a.bertscore_cache) if a.bertscore_cache else None)
+        evaluate_run(Path(a.run), a.label or Path(a.run).name, a.bertscore, a.limit, Path(a.bertscore_cache) if a.bertscore_cache else None,
+                     a.system)
     if a.compare or not a.run:
         compare()
     return 0

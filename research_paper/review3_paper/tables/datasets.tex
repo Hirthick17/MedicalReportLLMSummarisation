@@ -1,0 +1,18 @@
+% Counts from data/processed/train_manifest.json and the official test files (docs/PERSON1_DATA_PIPELINE.md).
+\begin{table}[t]
+\centering
+\caption{Datasets and splits used}\label{tab:data}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+Corpus & Train & Val. & Test & Target\\
+\midrule
+ACI-Bench (Dataset 1) & 67 & 20 & 120 (3$\times$40) & full visit note\\
+MTS-Dialog (Dataset 2) & 1,198 & 100 & 400 (2$\times$200) & one note section\\
+DialogueSOAP (train) & 3,000 & 100 & -- & SOAP (synthetic)\\
+\midrule
+SFT training mix & 4,265 & 220 & -- & \\
+\bottomrule
+\end{tabular}
+\end{table}

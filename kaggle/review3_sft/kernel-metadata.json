@@ -1,0 +1,15 @@
+{
+  "id": "hirthick17/medsum-review3-sft-infer",
+  "title": "medsum review3 sft infer",
+  "code_file": "review3_sft_infer.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": ["hirthick17/medsum-review3-prompts", "hirthick17/medsum-baseline-adapter"],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

@@ -31,3 +31,9 @@ kaggle/dataset/test/
 # evaluation scratch (regenerable)
 reports/eval_baseline/*_bertscore_cache.jsonl
 reports/eval_baseline/*.log
+
+# PatSnap raw API responses (scripts/search_papers.py cache)
+research_paper/cache/
+
+# Review 3 prompts dataset: derived copies of the test corpora, uploaded to Kaggle, never committed
+kaggle/review3_data/*.jsonl

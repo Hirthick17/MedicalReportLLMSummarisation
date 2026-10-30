@@ -1,0 +1,10 @@
+{
+  "title": "medsum review3 prompts",
+  "id": "hirthick17/medsum-review3-prompts",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "description": "Review 3 test prompts (zero-shot and fact-conditioned, factcond-v1) for ACI-Bench test 1-3 and MTS-Dialog test chat/sum 2023; built by scripts/build_review3_prompts.py; 520 records; sha256 ad61ed80673c270f."
+}
